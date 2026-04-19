@@ -1,12 +1,6 @@
 const sendDM = require('./DMbot')
 const csv = require('csv-parser');
 const fs = require('fs');
-const { send } = require('process');
-
-
-
-// console.log('starting...')
-// sendDM(link)
 
 const leads = [];
 
