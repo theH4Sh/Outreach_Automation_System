@@ -58,7 +58,7 @@ const sendDM = async (leads, message) => {
 			console.log("Failed for " + lead.username, error.message);
 		}
 	}
-	// browser.close();
+	browser.close();
 }
 
 module.exports = sendDM;
