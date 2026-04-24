@@ -20,10 +20,9 @@ const getCampaigns = async (req, res, next) => {
         const campaigns = await Campaign.find();
 
         if (campaigns.length === 0) {
-            return res.status(404).json({ error: 'No campaigns found' });
+            return res.status(200).json(campaigns);
         }
-        
-        res.json(campaigns);
+        res.status(200).json(campaigns);
     } catch (err) {
         next(err)
     }
@@ -42,7 +41,7 @@ const getCampaignById = async (req, res, next) => {
         if (!campaign) {
             return res.status(404).json({ error: 'Campaign not found' });
         }
-        res.json(campaign);
+        res.status(200).json(campaign)
     } catch (err) {
         next(err)
     }
@@ -60,6 +59,10 @@ const updateCampaign = async (req, res, next) => {
 
         const campaign = await Campaign.findById(id);
 
+        if (!campaign) {
+            return res.status(404).json({ error: 'Campaign not found' });
+        }
+
         campaign.name = name || campaign.name;
         campaign.description = description || campaign.description;
         
@@ -70,11 +73,7 @@ const updateCampaign = async (req, res, next) => {
 
         await campaign.save();
 
-        if (!campaign) {
-            return res.status(404).json({ error: 'Campaign not found' });
-        }
-
-        res.json(campaign);
+        res.status(200).json(campaign);
     } catch (err) {
         next(err)
     }
@@ -90,20 +89,26 @@ const updateCampaignStatus = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid campaign ID' });
         }
 
-        const campaign = await Campaign.findById(id);
+        // if (!['active', 'inactive'].includes(status)) {
+        //     return res.status(400).json({ error: 'Invalid status value' });
+        // }
+
+        const campaign = await Campaign.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true, runValidators: true }
+        );
 
         if (!campaign) {
             return res.status(404).json({ error: 'Campaign not found' });
         }
 
-        campaign.status = status || campaign.status;
-        await campaign.save();
+        res.status(200).json(campaign);
 
-        res.json(campaign);
     } catch (err) {
-        next(err)
+        next(err);
     }
-}
+};
 
 module.exports = {
     createCampaign,
