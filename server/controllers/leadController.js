@@ -62,7 +62,7 @@ const deleteLead = async (req, res, next) => {
 
         if (lead.location) {
             try {
-                fs.unlink(lead.location);
+                await fs.unlink(lead.location);
             } catch (err) {
                 console.log(`Failed to delete file at ${lead.location}: ${err.message}`)
             }
