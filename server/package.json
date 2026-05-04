@@ -15,7 +15,7 @@
     "@playwright/test": "^1.59.0",
     "@types/node": "^25.5.0",
     "jest": "^30.3.0",
-    "mongodb-memory-server": "^11.0.1",
+    "mongodb-memory-server": "^11.1.0",
     "nodemon": "^3.0.1",
     "supertest": "^7.2.2"
   },
@@ -24,6 +24,10 @@
     "dotenv": "^17.4.2",
     "express": "^4.18.4",
     "mongoose": "^7.5.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1"
+  },
+  "jest": {
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup/db.js"]
   }
 }

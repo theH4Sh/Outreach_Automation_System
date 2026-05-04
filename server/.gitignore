@@ -2,3 +2,4 @@ auth.json
 .env
 node_modules
 *.csv
+files/*

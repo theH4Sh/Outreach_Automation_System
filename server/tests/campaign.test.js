@@ -1,17 +1,17 @@
 const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
-require('dotenv').config();
+// require('dotenv').config();
 
 const Campaign = require('../model/Campaign')
 
-  beforeAll(async () => {
-    await mongoose.connect(process.env.MONGODB_URI_TEST);
-  });
+  // beforeAll(async () => {
+  //   await mongoose.connect(process.env.MONGODB_URI_TEST);
+  // });
 
-  afterAll(async () => {
-    await mongoose.connection.close();
-  });
+  // afterAll(async () => {
+  //   await mongoose.connection.close();
+  // });
     
 
 describe('/GET /campaign', () => {
