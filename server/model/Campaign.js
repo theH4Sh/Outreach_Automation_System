@@ -5,7 +5,8 @@ const campaignSchema = new mongoose.Schema({
   description: { type: String },
   message: { type: String },
   leads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lead' }],
-  status: { type: String, enum: ['active', 'inactive'], default: 'inactive' },
+  status: { type: String, enum: ['active', 'inactive', 'completed'], default: 'inactive' },
+  progress: { type: Number, default: 0 }
 }, { timestamps: true });
 
 const Campaign = mongoose.model('Campaign', campaignSchema);

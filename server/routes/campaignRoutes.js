@@ -1,5 +1,11 @@
 const express = require('express');
-const { createCampaign, getCampaigns, getCampaignById, updateCampaign, updateCampaignStatus } = require('../controllers/campaignController');
+const { 
+    createCampaign, 
+    getCampaigns, 
+    getCampaignById, 
+    updateCampaign, 
+    updateCampaignStatus
+} = require('../controllers/campaignController');
 
 const router = express.Router();
 

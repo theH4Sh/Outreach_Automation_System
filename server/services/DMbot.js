@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
+const Campaign = require('../model/Campaign');
 
-const sendDM = async (leads, message) => {
+const sendDM = async (lead, message) => {
 	const browser = await chromium.launchPersistentContext(
 		'auth.json',
 	{
@@ -8,7 +9,9 @@ const sendDM = async (leads, message) => {
 	})
 
 	const page = await browser.newPage();
-	for (const lead of leads) {
+
+	//for (const lead of leads) {
+
 		const link = `https://www.instagram.com/${lead.username}`
 
 		try {
@@ -57,7 +60,7 @@ const sendDM = async (leads, message) => {
 		} catch (error) {
 			console.log("Failed for " + lead.username, error.message);
 		}
-	}
+	//}
 	browser.close();
 }
 

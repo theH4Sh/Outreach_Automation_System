@@ -1,6 +1,7 @@
 const Campaign = require('../model/Campaign');
 const Lead = require('../model/Lead')
 const mongoose = require('mongoose');
+const runCampaign = require('../services/campaignService');
 
 // Create a new campaign
 const createCampaign = async (req, res, next) => {
@@ -110,20 +111,33 @@ const updateCampaignStatus = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid campaign ID' });
         }
 
-        // if (!['active', 'inactive'].includes(status)) {
-        //     return res.status(400).json({ error: 'Invalid status value' });
-        // }
-
-        const campaign = await Campaign.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true, runValidators: true }
-        );
-
+        const campaign = await Campaign.findById(id);
         if (!campaign) {
             return res.status(404).json({ error: 'Campaign not found' });
         }
 
+        //START
+        if (status === 'active') {
+
+            if (campaign.status === 'active') {
+                return res.status(400).json({ error: 'Campaign is already active' });
+            }
+
+            campaign.status = 'active';
+            await campaign.save();
+
+            runCampaign(campaign);
+        }
+
+        //END
+        else if (status === 'inactive') {
+            campaign.status = 'inactive';
+            await campaign.save();
+        }
+
+        else {
+            return res.status(400).json({ error: 'Invalid status value' });
+        }
         res.status(200).json(campaign);
 
     } catch (err) {
