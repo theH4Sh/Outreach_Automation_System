@@ -1,4 +1,4 @@
-const sendDM = require('./DMbot')
+const sendDM = require('../engine/DMbot')
 const csv = require('csv-parser');
 const fs = require('fs');
 const Lead = require('../model/Lead')
