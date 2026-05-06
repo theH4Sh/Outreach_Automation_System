@@ -3,7 +3,8 @@ const app = require('../app');
 const mongoose = require('mongoose');
 // require('dotenv').config();
 
-const Campaign = require('../model/Campaign')
+const Campaign = require('../model/Campaign');
+const { beforeEach } = require('node:test');
 
   // beforeAll(async () => {
   //   await mongoose.connect(process.env.MONGODB_URI_TEST);
@@ -43,17 +44,77 @@ describe('/GET /campaign', () => {
 })
 
 describe('/POST /campaign/', () => {
+  let leadsIds = []
+
+  beforeEach(async ()=> {
+    //create 2 leads via file upload
+    const res1 = await request(app)
+      .post('/api/lead')
+      .attach('file', 'tests/files/test.csv')
+
+    const res2 = await request(app)
+      .post('/api/lead')
+      .attach('file', 'tests/files/test.csv')
+
+    leadsIds = [res1.body._id, res2.body._id];
+  })
+
   test('POST /api/campaign should create a campaign', async() => {
     const res = await request(app)
       .post('/api/campaign')
       .send({
           name:'Exhibition beyong the walls',
           description:'WE WILL KILL THEM TITANS',
-          message: 'TATAKAEEEE'
+          message: 'TATAKAEEEE',
+          leads: leadsIds
       })
 
       expect(res.statusCode).toBe(201)
       expect(res.body.name).toBe('Exhibition beyong the walls')
+  })
+  
+    test('POST /api/campaign should return 400 not an array', async() => {
+      const res = await request(app)
+        .post('/api/campaign')
+        .send({
+          name: 'LeadTest',
+          description: 'just a test',
+          message: 'yo yo yo',
+          leads: leadsIds._id
+        })
+
+        expect(res.statusCode).toBe(400)
+        expect(res.body.error).toBe('Lead must be an array')
+    })
+
+    test('POST /api/campaign should return 400 Invalid lead id', async () => {
+      const res = await request(app)
+        .post('/api/campaign')
+        .send({
+          name: "lead test",
+          description: "just testing",
+          message: "yo yo you yo ",
+          leads: ['123']
+        })
+
+        expect(res.statusCode).toBe(400)
+        expect(res.body.error).toBe('Invalid lead ID')
+    })
+
+    test('POST /api/campaign should return 404 lead not found', async () => {
+      const fakeId = new mongoose.Types.ObjectId()
+
+      const res = await request(app)
+        .post('/api/campaign')
+        .send({
+          name: "lead test",
+          description: "just testing",
+          message: "yo yo you yo ",
+          leads: [fakeId]
+        })
+
+        expect(res.statusCode).toBe(404)
+        expect(res.body.error).toBe('One or more leads not found')
     })
 })
 

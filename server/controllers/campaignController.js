@@ -1,11 +1,32 @@
 const Campaign = require('../model/Campaign');
+const Lead = require('../model/Lead')
 const mongoose = require('mongoose');
 
 // Create a new campaign
 const createCampaign = async (req, res, next) => {
     try {
-        const { name, description, message } = req.body;
-        const campaign = new Campaign({ name, description, message });
+        const { name, description, message, leads } = req.body;
+
+        if (!Array.isArray(leads)) {
+            return res.status(400).json({ error: 'Lead must be an array' });
+        }
+
+        for (const lead of leads) {
+            if (!mongoose.Types.ObjectId.isValid(lead)) {
+                return res.status(400).json({ error: 'Invalid lead ID' });
+            }
+        }
+
+        //check the existence of leads
+        const existingLeads = await Lead.find({
+            _id: { $in: leads }
+        })
+
+        if (existingLeads.length !== leads.length) {
+            return res.status(404).json({ error: 'One or more leads not found'})
+        }
+
+        const campaign = new Campaign({ name, description, message, leads });
         await campaign.save();
         res.status(201).json(campaign);
     } catch (err) {
