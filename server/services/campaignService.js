@@ -3,6 +3,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const Lead = require('../model/Lead')
 const Campaign = require('../model/Campaign');
+const { chromium } = require('playwright');
 
 const runCampaign = async (campaign) => {
     try {
@@ -26,6 +27,13 @@ const runCampaign = async (campaign) => {
 
             leads.push(...fileData);
         }
+        
+        const browser = await chromium.launchPersistentContext('auth.json',{
+            headless: false,
+        })
+
+        const page = await browser.newPage();
+
         for (let i = campaign.progress; i < leads.length; i++) {
             const freshCampaign = await Campaign.findById(campaign._id);
 
@@ -34,13 +42,17 @@ const runCampaign = async (campaign) => {
                 return
             }
 
-            await sendDM(leads[i], campaign.message);
+            await sendDM(page, leads[i], campaign.message);
 
             // save progress after each DM
             await Campaign.findByIdAndUpdate(campaign._id, {
                 progress: i + 1
             })
         }
+
+        await browser.close();
+
+        // mark campaign as completed and reset progress
 
         await Campaign.findByIdAndUpdate(campaign._id, {
             status: 'completed',

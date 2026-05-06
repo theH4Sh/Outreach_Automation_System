@@ -1,67 +1,56 @@
 const { chromium } = require('playwright');
 const Campaign = require('../model/Campaign');
 
-const sendDM = async (lead, message) => {
-	const browser = await chromium.launchPersistentContext(
-		'auth.json',
-	{
-		headless: false,
-	})
+const sendDM = async (page, lead, message) => {
 
-	const page = await browser.newPage();
+	const link = `https://www.instagram.com/${lead.username}`
 
-	//for (const lead of leads) {
+	try {
+		await page.goto(link, { waitUntil: 'domcontentloaded' });
+		await page.waitForSelector('header', { timeout: 10000 });
 
-		const link = `https://www.instagram.com/${lead.username}`
+		const isNotFound = await page
+			.locator("text=Sorry, this page isn't available.")
+			.isVisible()
+			.catch(() => false);
 
-		try {
-			await page.goto(link, { waitUntil: 'domcontentloaded' });
-			await page.waitForSelector('header', { timeout: 10000 });
+			console.log("not found checked");
 
-			const isNotFound = await page
-				.locator("text=Sorry, this page isn't available.")
-				.isVisible()
-				.catch(() => false);
+		const bodyText = await page.content('body');
+		const isPrivate = bodyText.includes('This profile is private');
 
-				console.log("not found checked");
+			console.log("private checked", isPrivate);
 
-			const bodyText = await page.content('body');
-			const isPrivate = bodyText.includes('This profile is private');
+		const canDM = await page
+			.getByRole('button', { name: 'Message', exact: true })
+			.isVisible()
+			.catch(() => false);
 
-				console.log("private checked", isPrivate);
-
-			const canDM = await page
-				.getByRole('button', { name: 'Message', exact: true })
-				.isVisible()
-				.catch(() => false);
-
-				console.log("can DM checked", canDM);
-				
-			if (isNotFound) {
-				throw new Error('Profile not found');
-			}
-
-			if (isPrivate && !canDM) {
-				throw new Error('Profile is private');
-			}
-
-			if (!canDM) {
-				throw new Error('Cannot send DM to this profile');
-			}
-
-			await page.getByRole('button', { name: 'Message', exact: true }).click();
-			const input = await page.getByRole('textbox')
-			await input.type(message, { delay: 100 });
-			await page.waitForTimeout(500);
-			await page.keyboard.press('Enter')
-			await page.waitForTimeout(500)
-			console.log('message sent successfully to ' + lead.username)
-
-		} catch (error) {
-			console.log("Failed for " + lead.username, error.message);
+			console.log("can DM checked", canDM);
+			
+		if (isNotFound) {
+			throw new Error('Profile not found');
 		}
-	//}
-	browser.close();
+
+		if (isPrivate && !canDM) {
+			throw new Error('Profile is private');
+		}
+
+		if (!canDM) {
+			throw new Error('Cannot send DM to this profile');
+		}
+
+		await page.getByRole('button', { name: 'Message', exact: true }).click();
+		const input = await page.getByRole('textbox')
+		await input.type(message, { delay: 100 });
+		await page.waitForTimeout(500);
+		await page.keyboard.press('Enter')
+		await page.waitForTimeout(500)
+		console.log('message sent successfully to ' + lead.username)
+
+	} catch (error) {
+		console.log("Failed for " + lead.username, error.message);
+	}
 }
 
 module.exports = sendDM;
