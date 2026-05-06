@@ -30,8 +30,8 @@ const createCampaign = async (req, res, next) => {
         await campaign.save();
         res.status(201).json(campaign);
     } catch (err) {
-        console.error('Error creating campaign:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        //console.error('Error creating campaign:', err);
+        next(err)
     }
 }
 
