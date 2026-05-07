@@ -5,6 +5,8 @@ const path = require('path');
 const campaignRoutes = require('./routes/campaignRoutes');
 const leadRoutes = require('./routes/leadRoutes')
 
+const errorHandler = require('./middleware/errorHandler');
+
 const app = express();
 
 app.use(morgan('dev'));
@@ -15,12 +17,6 @@ app.use('/api', campaignRoutes);
 app.use('/api', leadRoutes)
 
 //error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Internal server error', 
-    details: err.message 
-  });
-});
+app.use(errorHandler);
 
 module.exports = app;
