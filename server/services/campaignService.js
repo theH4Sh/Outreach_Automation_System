@@ -1,17 +1,9 @@
-const sendDM = require('../engine/DMbot')
-const csv = require('csv-parser');
-const fs = require('fs');
 const Lead = require('../model/Lead')
 const Campaign = require('../model/Campaign');
 const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
-const { chromium } = require('playwright');
-
-const validateObjectId = (id, message) => {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        throw new AppError(message, 400);
-    }
-}
+const runCampaign = require('./campaignRunner/runCampaign')
+const validateObjectId = require('../utils/validateObjectId')
 
 const createCampaignService = async ({ name, description, message, leads }) => {
     if (!Array.isArray(leads)) {
@@ -78,92 +70,35 @@ const updateCampaignService = async (id, data) => {
     return campaign;
 }
 
-const runCampaign = async (campaign) => {
-    try {
-        const leadDocs = await Lead.find({
-            _id: { $in: campaign.leads }
-        });
-
-        const leads = [];
-
-        // wrap CSV reading in Promise so we can await it
-        for (const leadDoc of leadDocs) {
-            const fileData = await new Promise((resolve, reject) => {
-                const results = [];
-
-                fs.createReadStream(leadDoc.location)
-                    .pipe(csv())
-                    .on('data', (data) => results.push(data))
-                    .on('end', () => resolve(results))
-                    .on('error', reject);
-            });
-
-            leads.push(...fileData);
-        }
-        
-        const browser = await chromium.launchPersistentContext('auth.json',{
-            headless: false,
-        })
-
-        const page = await browser.newPage();
-
-        for (let i = campaign.progress; i < leads.length; i++) {
-            const freshCampaign = await Campaign.findById(campaign._id);
-
-            if (!freshCampaign || freshCampaign.status !== 'active') {
-                console.log('Campaign stopped at index: ', i);
-                return
-            }
-
-            await sendDM(page, leads[i], campaign.message);
-
-            // save progress after each DM
-            await Campaign.findByIdAndUpdate(campaign._id, {
-                progress: i + 1
-            })
-        }
-
-        await browser.close();
-
-        // mark campaign as completed and reset progress
-
-        await Campaign.findByIdAndUpdate(campaign._id, {
-            status: 'completed',
-            progress: 0
-        })
-
-    } catch (err) {
-        console.error('Error executing campaign:', err);
-    }
-};
-
 const updateCampaignStatusService = async (id, status) => {
     validateObjectId(id, 'Invalid campaign ID')
 
     const campaign = await Campaign.findById(id);
+
     if (!campaign) {
         throw new AppError('Campaign not found', 404)
     }
 
+    const allowedStatuses = [
+        'active',
+        'inactive'
+    ]
+
+    if (!allowedStatuses.includes(status)) {
+        throw new AppError ('Invalid status value', 400)
+    }
+
     //START
+    if (status === 'active' && campaign.status === 'active') {
+
+        throw new AppError('Campaign is already active', 400);
+    }
+
+    campaign.status = status;
+    await campaign.save();
+
     if (status === 'active') {
-
-        if (campaign.status === 'active') {
-            throw new AppError('Campaign is already active', 400);
-        }
-
-        campaign.status = 'active';
-        await campaign.save();
-
         runCampaign(campaign);
-    }
-    //END
-    else if (status === 'inactive') {
-        campaign.status = 'inactive';
-        await campaign.save();
-    }
-    else {
-        throw new AppError('Invalid status value', 400)
     }
 
     return campaign

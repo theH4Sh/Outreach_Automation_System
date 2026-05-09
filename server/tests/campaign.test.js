@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../app');
 const mongoose = require('mongoose');
+jest.mock('../services/campaignRunner/runCampaign', () => jest.fn());
+
 // require('dotenv').config();
 
 const Campaign = require('../model/Campaign');
@@ -175,69 +177,87 @@ describe('PUT /campaign/:id', () => {
     })
 })
 
-// describe('PATCH /campaign/:id/status', () => {
-//     //update campaign status
-//     test('PATCH /api/campaign/:id/status -> invalid id return 400', async () => {
-//       const res = await request(app)
-//         .patch('/api/campaign/123/status')
+describe('PATCH /campaign/:id/status', () => {
+    //update campaign status
+    test('PATCH /api/campaign/:id/status -> invalid id return 400', async () => {
+      const res = await request(app)
+        .patch('/api/campaign/123/status')
       
-//         expect(res.statusCode).toBe(400)
-//     })
+        expect(res.statusCode).toBe(400)
+    })
 
-//     test('PATCH /api/campaign/:id/status  -> invalid status value 500', async () => {
-//       const mockCampaign = await Campaign.create({
-//         name: "mock test",
-//         description: "random test",
-//         message: "we we we"
-//       })
+    test('PATCH /api/campaign/:id/status  -> invalid status value 500', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we"
+      })
       
-//       const res = await request(app)
-//         .patch(`/api/campaign/${mockCampaign._id}/status`)
-//         .send({
-//           status: "brrr..."
-//         })
+      const res = await request(app)
+        .patch(`/api/campaign/${mockCampaign._id}/status`)
+        .send({
+          status: "brrr..."
+        })
 
-//       expect(res.statusCode).toBe(500)
-//     })
+      expect(res.statusCode).toBe(400)
+    })
 
-//     test('PATCH /api/campaign/:id/status  -> campaign not found 404', async () => {
-//       const fakeId = new mongoose.Types.ObjectId()
+    test('PATCH /api/campaign/:id/status  -> campaign not found 404', async () => {
+      const fakeId = new mongoose.Types.ObjectId()
       
-//       const res = await request(app)
-//         .patch(`/api/campaign/${fakeId}/status`)
+      const res = await request(app)
+        .patch(`/api/campaign/${fakeId}/status`)
       
-//       expect(res.statusCode).toBe(404)
-//     })
+      expect(res.statusCode).toBe(404)
+    })
 
-//     test('PATCH /api/campaign/:id/status  -> activate campaign 200', async () => {
-//       const mockCampaign = await Campaign.create({
-//         name: "mock test",
-//         description: "random test",
-//         message: "we we we"
-//       })
+    test('PATCH /api/campaign/:id/status  -> activate campaign 200', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we"
+      })
       
-//       const res = await request(app)
-//         .patch(`/api/campaign/${mockCampaign._id}/status`)
-//         .send({
-//           status: "active"
-//         })
+      const res = await request(app)
+        .patch(`/api/campaign/${mockCampaign._id}/status`)
+        .send({
+          status: "active"
+        })
 
-//       expect(res.statusCode).toBe(200)
-//     })
+      expect(res.statusCode).toBe(200)
+    })
 
-//     test('PATCH /api/campaign/:id/status  -> activate 200', async () => {
-//       const mockCampaign = await Campaign.create({
-//         name: "mock test",
-//         description: "random test",
-//         message: "we we we"
-//       })
+        test('PATCH /api/campaign/:id/status  -> campaign already active 400', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we",
+        status: "active"
+      })
       
-//       const res = await request(app)
-//         .patch(`/api/campaign/${mockCampaign._id}/status`)
-//         .send({
-//           status: "inactive"
-//         })
+      const res = await request(app)
+        .patch(`/api/campaign/${mockCampaign._id}/status`)
+        .send({
+          status: "active"
+        })
 
-//       expect(res.statusCode).toBe(200)
-//     })
-// })
+      expect(res.statusCode).toBe(400)
+    })
+
+
+    test('PATCH /api/campaign/:id/status  -> activate 200', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we"
+      })
+      
+      const res = await request(app)
+        .patch(`/api/campaign/${mockCampaign._id}/status`)
+        .send({
+          status: "inactive"
+        })
+
+      expect(res.statusCode).toBe(200)
+    })
+})
