@@ -20,6 +20,7 @@
     "supertest": "^7.2.2"
   },
   "dependencies": {
+    "cors": "^2.8.6",
     "csv-parser": "^3.2.0",
     "dotenv": "^17.4.2",
     "express": "^4.18.4",
@@ -28,6 +29,8 @@
     "multer": "^2.1.1"
   },
   "jest": {
-    "setupFilesAfterEnv": ["<rootDir>/tests/setup/db.js"]
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup/db.js"
+    ]
   }
 }
