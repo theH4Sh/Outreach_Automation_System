@@ -28,7 +28,7 @@ const UploadLead = () => {
             setSelectedFile(null)
             if (fileInputRef.current) fileInputRef.current.value = ''
         } catch (err) {
-            setMessage({ type: 'error', text: error })
+            setMessage({ type: 'error', text: err.message })
         }
     }
 
