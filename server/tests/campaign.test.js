@@ -177,6 +177,37 @@ describe('PUT /campaign/:id', () => {
     })
 })
 
+describe('/DELETE /campaign/:id', () => {
+    test('DELETE /api/campaign/:id -> invalid id returns 400', async () => {
+      const res = await request(app)
+        .delete('/api/campaign/123')
+
+      expect(res.statusCode).toBe(400)
+    })
+
+    test('DELETE /api/campaign/:id -> campaign not found 404', async () => {
+      const fakeId = new mongoose.Types.ObjectId()
+
+      const res = await request(app)
+        .delete(`/api/campaign/${fakeId}`)
+
+      expect(res.statusCode).toBe(404)
+    })
+
+    test('DELETE /api/campaign/:id -> delete campaign 200', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we"
+      })
+
+      const res = await request(app)
+        .delete(`/api/campaign/${mockCampaign._id}`)
+
+      expect(res.statusCode).toBe(200)
+    })
+})
+
 describe('PATCH /campaign/:id/status', () => {
     //update campaign status
     test('PATCH /api/campaign/:id/status -> invalid id return 400', async () => {

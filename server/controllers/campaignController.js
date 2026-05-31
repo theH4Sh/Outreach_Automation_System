@@ -8,7 +8,8 @@ const {
     getCampaignsService,
     getCampaignByIdService,
     updateCampaignService,
-    updateCampaignStatusService
+    updateCampaignStatusService,
+    deleteCampaignService
 } = require('../services/campaignService');
 
 // Create a new campaign
@@ -43,6 +44,13 @@ const updateCampaign = catchAsync(async (req, res) => {
     res.status(200).json(campaign);
 })
 
+// Delete a campaign by ID
+const deleteCampaign = catchAsync(async (req, res) => {
+    const campaign = await deleteCampaignService(req.params.id)
+
+    res.status(200).json(campaign);
+})
+
 // Update campaign status [active/inactive]
 const updateCampaignStatus = catchAsync(async (req, res) => {
     const { id } = req.params;
@@ -60,5 +68,6 @@ module.exports = {
     getCampaigns,
     getCampaignById,
     updateCampaign,
-    updateCampaignStatus
+    updateCampaignStatus,
+    deleteCampaign
 }

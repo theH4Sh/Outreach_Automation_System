@@ -104,11 +104,24 @@ const updateCampaignStatusService = async (id, status) => {
     return campaign
 }
 
+const deleteCampaignService = async (id) => {
+    validateObjectId(id, 'Invalid campaign ID')
+
+    const campaign = await Campaign.findByIdAndDelete(id);
+
+    if (!campaign) {
+        throw new AppError('Campaign not found', 404)
+    }
+
+    return campaign
+}
+
 module.exports = {
     createCampaignService,
     getCampaignsService,
     getCampaignByIdService,
     updateCampaignService,
     runCampaign,
-    updateCampaignStatusService
+    updateCampaignStatusService,
+    deleteCampaignService
 }
