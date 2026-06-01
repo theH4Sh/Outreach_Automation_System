@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { Link } from 'react-router'
 import useFetch from '../hooks/useFetch'
 
 const CampaignManager = () => {
@@ -138,35 +139,43 @@ const CampaignManager = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  {campaign.status !== 'active' && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    {campaign.status !== 'active' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(campaign._id, 'active')}
+                        disabled={updatingId === campaign._id}
+                        className="inline-flex flex-1 items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      >
+                        {updatingId === campaign._id ? 'Updating…' : 'Activate'}
+                      </button>
+                    )}
+                    {campaign.status === 'active' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(campaign._id, 'inactive')}
+                        disabled={updatingId === campaign._id}
+                        className="inline-flex flex-1 items-center justify-center rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      >
+                        {updatingId === campaign._id ? 'Updating…' : 'Pause'}
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => handleStatusChange(campaign._id, 'active')}
+                      onClick={() => handleDeleteCampaign(campaign._id)}
                       disabled={updatingId === campaign._id}
-                      className="inline-flex flex-1 items-center justify-center rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      className="inline-flex flex-1 items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                     >
-                      {updatingId === campaign._id ? 'Updating…' : 'Activate'}
+                      {updatingId === campaign._id ? 'Deleting…' : 'Delete'}
                     </button>
-                  )}
-                  {campaign.status === 'active' && (
-                    <button
-                      type="button"
-                      onClick={() => handleStatusChange(campaign._id, 'inactive')}
-                      disabled={updatingId === campaign._id}
-                      className="inline-flex flex-1 items-center justify-center rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-                    >
-                      {updatingId === campaign._id ? 'Updating…' : 'Pause'}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCampaign(campaign._id)}
-                    disabled={updatingId === campaign._id}
-                    className="inline-flex flex-1 items-center justify-center rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  </div>
+                  <Link
+                    to={`/campaigns/${campaign._id}`}
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
                   >
-                    {updatingId === campaign._id ? 'Deleting…' : 'Delete'}
-                  </button>
+                    View details
+                  </Link>
                 </div>
               </div>
             </div>
