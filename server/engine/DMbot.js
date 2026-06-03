@@ -16,7 +16,9 @@ const sendDM = async (page, lead, message) => {
 
 			console.log("not found checked");
 
-		const bodyText = await page.content('body');
+		// const bodyText = await page.content('body');
+		 const bodyText = await page.textContent('body');
+		// const bodyText = await page.locator('body').innerText();
 		const isPrivate = bodyText.includes('This profile is private');
 
 			console.log("private checked", isPrivate);
