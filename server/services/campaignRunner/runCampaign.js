@@ -4,6 +4,8 @@ const sendDM = require('../../engine/DMbot')
 
 const Campaign = require('../../model/Campaign')
 
+const compileTemplate = require('../../utils/compileTemplate')
+
 const runCampaign = async (campaign) => {
     const leads = await loadLeads(campaign)
     const browser = await createBrowser();
@@ -18,7 +20,9 @@ const runCampaign = async (campaign) => {
                 return
             }
 
-            await sendDM(page, leads[i], campaign.message);
+            const message = compileTemplate(campaign.message, leads[i])
+
+            await sendDM(page, leads[i], message);
 
             // save progress after each DM
             await Campaign.findByIdAndUpdate(campaign._id, {
