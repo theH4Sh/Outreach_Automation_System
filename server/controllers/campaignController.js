@@ -7,6 +7,7 @@ const {
     createCampaignService,
     getCampaignsService,
     getCampaignByIdService,
+    getCampaignLogsService,
     updateCampaignService,
     updateCampaignStatusService,
     deleteCampaignService
@@ -51,6 +52,13 @@ const deleteCampaign = catchAsync(async (req, res) => {
     res.status(200).json(campaign);
 })
 
+// Get campaign logs
+const getCampaignLogs = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const logs = await getCampaignLogsService(id)
+    res.status(200).json(logs)
+})
+
 // Update campaign status [active/inactive]
 const updateCampaignStatus = catchAsync(async (req, res) => {
     const { id } = req.params;
@@ -67,6 +75,7 @@ module.exports = {
     createCampaign,
     getCampaigns,
     getCampaignById,
+    getCampaignLogs,
     updateCampaign,
     updateCampaignStatus,
     deleteCampaign

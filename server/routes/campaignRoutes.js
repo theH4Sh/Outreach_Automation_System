@@ -3,6 +3,7 @@ const {
     createCampaign, 
     getCampaigns, 
     getCampaignById, 
+    getCampaignLogs,
     updateCampaign, 
     updateCampaignStatus,
     deleteCampaign
@@ -14,6 +15,7 @@ const router = express.Router();
 router.post('/campaign', createCampaign);
 router.get('/campaigns', getCampaigns);
 router.get('/campaign/:id', getCampaignById);
+router.get('/campaign/:id/logs', getCampaignLogs);
 router.put('/campaign/:id', updateCampaign);
 router.patch('/campaign/:id/status', updateCampaignStatus);
 router.delete('/campaign/:id', deleteCampaign);

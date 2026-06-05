@@ -1,5 +1,6 @@
 const Lead = require('../model/Lead')
 const Campaign = require('../model/Campaign');
+const Log = require('../model/Log');
 const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
 const runCampaign = require('./campaignRunner/runCampaign')
@@ -104,6 +105,17 @@ const updateCampaignStatusService = async (id, status) => {
     return campaign
 }
 
+const getCampaignLogsService = async (id) => {
+    validateObjectId(id, 'Invalid campaign ID')
+
+    const campaign = await Campaign.findById(id);
+    if (!campaign) {
+        throw new AppError('Campaign not found', 404)
+    }
+
+    return await Log.find({ campaignId: id }).sort({ createdAt: 1 })
+}
+
 const deleteCampaignService = async (id) => {
     validateObjectId(id, 'Invalid campaign ID')
 
@@ -120,6 +132,7 @@ module.exports = {
     createCampaignService,
     getCampaignsService,
     getCampaignByIdService,
+    getCampaignLogsService,
     updateCampaignService,
     runCampaign,
     updateCampaignStatusService,

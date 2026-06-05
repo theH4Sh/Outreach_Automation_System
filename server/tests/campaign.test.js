@@ -6,6 +6,7 @@ jest.mock('../services/campaignRunner/runCampaign', () => jest.fn());
 // require('dotenv').config();
 
 const Campaign = require('../model/Campaign');
+const Log = require('../model/Log');
 const { beforeEach } = require('node:test');
 
   // beforeAll(async () => {
@@ -42,6 +43,43 @@ describe('/GET /campaign', () => {
         .get(`/api/campaign/${mockCampaign._id}`)
 
         expect (res.statusCode).toBe(200)
+    })
+
+    test('GET /api/campaign/:id/logs -> invalid id returns 400', async () => {
+      const res = await request(app)
+        .get('/api/campaign/123/logs')
+
+      expect(res.statusCode).toBe(400)
+    })
+
+    test('GET /api/campaign/:id/logs -> campaign not found 404', async () => {
+      const fakeId = new mongoose.Types.ObjectId()
+      const res = await request(app)
+        .get(`/api/campaign/${fakeId}/logs`)
+
+      expect(res.statusCode).toBe(404)
+    })
+
+    test('GET /api/campaign/:id/logs -> returns saved logs', async () => {
+      const mockCampaign = await Campaign.create({
+        name: "mock test",
+        description: "random test",
+        message: "we we we"
+      })
+
+      await Log.create([
+        { campaignId: mockCampaign._id, success: true, username: 'user1', message: 'sent 1' },
+        { campaignId: mockCampaign._id, success: false, username: 'user2', message: 'failed 2' }
+      ])
+
+      const res = await request(app)
+        .get(`/api/campaign/${mockCampaign._id}/logs`)
+
+      expect(res.statusCode).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body).toHaveLength(2)
+      expect(res.body[0].username).toBe('user1')
+      expect(res.body[1].username).toBe('user2')
     })
 })
 
