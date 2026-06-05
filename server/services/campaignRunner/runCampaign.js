@@ -5,6 +5,7 @@ const sendDM = require('../../engine/DMbot')
 const Campaign = require('../../model/Campaign')
 
 const compileTemplate = require('../../utils/compileTemplate')
+const campaignLogger = require('../../utils/campaignLogger')
 
 const runCampaign = async (campaign) => {
     const leads = await loadLeads(campaign)
@@ -22,11 +23,22 @@ const runCampaign = async (campaign) => {
 
             const message = compileTemplate(campaign.message, leads[i])
 
-            await sendDM(page, leads[i], message);
+            const result = await sendDM(page, leads[i], message);
+
+            const progress = i + 1
+
+            campaignLogger.emit('log', {
+                campaignId: campaign._id,
+                success: result.success,
+                username: result.username,
+                message: result.message,
+                progress: progress
+            })
+
 
             // save progress after each DM
             await Campaign.findByIdAndUpdate(campaign._id, {
-                progress: i + 1
+                progress
             })
         }
 

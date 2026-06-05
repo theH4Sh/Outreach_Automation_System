@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = require('./app');
+const { createServer } = require("http")
+const { Server } = require("socket.io")
+
+const campaignLogger = require('./utils/campaignLogger')
+const Log = require('./model/Log')
 
 const port = process.env.PORT || 4000;
 const mongoUri = process.env.MONGODB_URI;
@@ -16,6 +21,32 @@ mongoose.connect(mongoUri, {
     process.exit(1);
   });
 
-app.listen(port, () => {
+
+const httpServer = createServer(app)
+const io = new Server(httpServer, {
+  cors: { origin: "*"}
+})
+
+io.on('connection', (socket) => {
+  console.log("Frontend Connected")
+})
+
+campaignLogger.on('log', async (data) => {
+  io.emit('campaign-log', data)
+
+  try {
+    await Log.create({
+      campaignId: data.campaignId,
+      success: data.success,
+      username: data.username,
+      message: data.message,
+      progress: data.progress
+    })
+  } catch (err) {
+    console.log("Failed to save log to database", err)
+  }
+})
+
+httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

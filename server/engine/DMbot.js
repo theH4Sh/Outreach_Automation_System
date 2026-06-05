@@ -48,10 +48,20 @@ const sendDM = async (page, lead, message) => {
 		await page.waitForTimeout(500);
 		await page.keyboard.press('Enter')
 		await page.waitForTimeout(500)
-		console.log('message sent successfully to ' + lead.username)
+		// console.log('message sent successfully to ' + lead.username)
+	 	return {
+			success: true,
+			username: lead.username,
+			message: `Message sent successfully to ${lead.username}`
+		}
 
 	} catch (error) {
-		console.log("Failed for " + lead.username, error.message);
+		// console.log("Failed for " + lead.username, error.message);
+		return {
+			success: false,
+			username: lead.username,
+			message: `Failed for ${lead.username}, ${error.message}`
+		}
 	}
 }
 
