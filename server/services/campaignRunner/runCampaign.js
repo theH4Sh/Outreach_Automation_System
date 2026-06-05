@@ -7,7 +7,10 @@ const Campaign = require('../../model/Campaign')
 const compileTemplate = require('../../utils/compileTemplate')
 const logger = require('../../utils/campaignLogger')
 
+const mongoose = require('mongoose')
+
 const runCampaign = async (campaign) => {
+    const runId = new mongoose.Types.ObjectId()
     const leads = await loadLeads(campaign)
     const browser = await createBrowser();
     try {
@@ -29,6 +32,7 @@ const runCampaign = async (campaign) => {
 
             logger.emit('log', {
                 campaignId: campaign._id,
+                runId: runId,
                 success: result.success,
                 username: result.username,
                 message: result.message

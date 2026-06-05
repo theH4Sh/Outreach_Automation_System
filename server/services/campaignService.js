@@ -113,7 +113,7 @@ const getCampaignLogsService = async (id) => {
         throw new AppError('Campaign not found', 404)
     }
 
-    return await Log.find({ campaignId: id }).sort({ createdAt: 1 })
+    return await Log.find({ campaignId: id }).sort({ runId: -1, createdAt: 1 })
 }
 
 const deleteCampaignService = async (id) => {

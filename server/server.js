@@ -37,6 +37,7 @@ campaignLogger.on('log', async (data) => {
   try {
     await Log.create({
       campaignId: data.campaignId,
+      runId: data.runId,
       success: data.success,
       username: data.username,
       message: data.message

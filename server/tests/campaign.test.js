@@ -67,9 +67,10 @@ describe('/GET /campaign', () => {
         message: "we we we"
       })
 
+      const runId = new mongoose.Types.ObjectId()
       await Log.create([
-        { campaignId: mockCampaign._id, success: true, username: 'user1', message: 'sent 1' },
-        { campaignId: mockCampaign._id, success: false, username: 'user2', message: 'failed 2' }
+        { campaignId: mockCampaign._id, runId: runId, success: true, username: 'user1', message: 'sent 1' },
+        { campaignId: mockCampaign._id, runId: runId, success: false, username: 'user2', message: 'failed 2' }
       ])
 
       const res = await request(app)

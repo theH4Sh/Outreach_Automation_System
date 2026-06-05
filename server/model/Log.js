@@ -6,6 +6,10 @@ const logSchema = new mongoose.Schema({
         required: true,
         ref: 'Campaign'
     },
+    runId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
     success: {
         type: Boolean,
         required: true
