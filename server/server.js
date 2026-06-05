@@ -39,12 +39,15 @@ campaignLogger.on('log', async (data) => {
       campaignId: data.campaignId,
       success: data.success,
       username: data.username,
-      message: data.message,
-      progress: data.progress
+      message: data.message
     })
   } catch (err) {
     console.log("Failed to save log to database", err)
   }
+})
+
+campaignLogger.on('progress', (data) => {
+  io.emit('campaign-progress', data)
 })
 
 httpServer.listen(port, () => {
