@@ -19,8 +19,7 @@ const logSchema = new mongoose.Schema({
         required: true
     },
     name: {
-        type: String,
-        required: true
+        type: String
     },
     message: {
         type: String,
