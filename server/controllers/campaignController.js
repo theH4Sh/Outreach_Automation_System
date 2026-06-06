@@ -76,9 +76,9 @@ const retryFailedLeads = catchAsync(async (req, res) => {
     const campaignId = req.params.id;
     const { runId } = req.query;
 
-    const campaign = await retryFailedLeadsService(campaignId, runId)
+    const result = await retryFailedLeadsService(campaignId, runId)
 
-    res.status(200).json(campaign)
+    res.status(200).json(result)
 })
 
 module.exports = {

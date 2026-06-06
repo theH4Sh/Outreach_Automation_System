@@ -144,14 +144,21 @@ const retryFailedLeadsService = async (campaignId, runId) => {
         success: false
     })
 
-    const failedUsernames = failedLogs.map(log => {return { 
+    const failedUsernames = failedLogs.map(log => ({
         username: log.username,
         name: log.name
-    }})
+    }))
 
     console.log('Failed usernames: ', failedUsernames)
 
     retryFailed(campaign, failedUsernames)
+
+    return {
+        success: true,
+        failedCount: failedUsernames.length,
+        runId,
+        campaignId: campaign._id,
+    }
 }
 
 module.exports = {
