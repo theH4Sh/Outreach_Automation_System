@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useFetch from '../hooks/useFetch'
 import { socket } from '../socket'
 
@@ -9,6 +9,7 @@ const CampaignDetailPage = () => {
   const [currentCampaign, setCurrentCampaign] = useState(null)
   const [statusMessage, setStatusMessage] = useState(null)
   const [updating, setUpdating] = useState(false)
+  const [retrying, setRetrying] = useState(false)
   const [logs, setLogs] = useState([])
   const [liveProgress, setLiveProgress] = useState(null)
 
@@ -20,28 +21,34 @@ const CampaignDetailPage = () => {
   }, {})
   
   const sortedRunIds = Object.keys(groupedLogs).sort((a, b) => b.localeCompare(a))
+  const latestFailedRunId = sortedRunIds.find((runId) => groupedLogs[runId].some((log) => !log.success))
+  const failedCount = latestFailedRunId ? groupedLogs[latestFailedRunId].filter((log) => !log.success).length : 0
 
   const displayedCampaign = currentCampaign ?? (campaign && campaign._id ? campaign : null)
   const progressPercentage = liveProgress ?? (displayedCampaign?.progress !== undefined && displayedCampaign?.leads?.length
     ? Math.round((displayedCampaign.progress / displayedCampaign.leads.length) * 100)
     : 0)
 
-  useEffect(() => {
+  const loadLogs = useCallback(async () => {
     if (!id) return
 
-    const loadLogs = async () => {
-      try {
-        const res = await fetch(`http://localhost:4000/api/campaign/${id}/logs`)
-        if (!res.ok) return
-        const data = await res.json()
-        setLogs(data)
-      } catch (err) {
-        console.error('Failed to load campaign logs', err)
-      }
+    try {
+      const res = await fetch(`http://localhost:4000/api/campaign/${id}/logs`)
+      if (!res.ok) return
+      const data = await res.json()
+      setLogs(data)
+    } catch (err) {
+      console.error('Failed to load campaign logs', err)
+    }
+  }, [id])
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      await loadLogs()
     }
 
-    loadLogs()
-  }, [id])
+    fetchLogs()
+  }, [loadLogs])
 
   useEffect(() => {
     if (!id) return
@@ -88,6 +95,39 @@ const CampaignDetailPage = () => {
       setStatusMessage({ type: 'error', text: err.message || 'Status update failed.' })
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleRetryFailed = async () => {
+    if (!latestFailedRunId) return
+    setStatusMessage(null)
+    setRetrying(true)
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/campaign/${id}/retry?runId=${latestFailedRunId}`, {
+        method: 'POST',
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(errorText || 'Unable to retry failed leads')
+      }
+
+      const text = await res.text()
+      if (text) {
+        try {
+          JSON.parse(text)
+        } catch {
+          console.warn('Retry response not JSON:', text)
+        }
+      }
+
+      await loadLogs()
+      setStatusMessage({ type: 'success', text: `Retry started for ${failedCount} failed lead${failedCount === 1 ? '' : 's'}.` })
+    } catch (err) {
+      setStatusMessage({ type: 'error', text: err.message || 'Retry failed.' })
+    } finally {
+      setRetrying(false)
     }
   }
 
@@ -138,14 +178,26 @@ const CampaignDetailPage = () => {
                 <span className={`inline-flex items-center rounded-3xl px-4 py-2 text-sm font-semibold ${statusBadge(displayedCampaign.status)}`}>
                   Status: <span className="ml-2 text-slate-900">{displayedCampaign.status}</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={handleToggleStatus}
-                  disabled={updating}
-                  className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-                >
-                  {updating ? 'Saving…' : actionLabel}
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={handleToggleStatus}
+                    disabled={updating}
+                    className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  >
+                    {updating ? 'Saving…' : actionLabel}
+                  </button>
+                  {latestFailedRunId && (
+                    <button
+                      type="button"
+                      onClick={handleRetryFailed}
+                      disabled={retrying}
+                      className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    >
+                      {retrying ? 'Retrying…' : `Retry ${failedCount} failed`}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
