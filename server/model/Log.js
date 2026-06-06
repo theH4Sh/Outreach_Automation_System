@@ -18,6 +18,10 @@ const logSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    name: {
+        type: String,
+        required: true
+    },
     message: {
         type: String,
         required: true

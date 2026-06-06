@@ -40,6 +40,7 @@ campaignLogger.on('log', async (data) => {
       runId: data.runId,
       success: data.success,
       username: data.username,
+      name: data.name,
       message: data.message
     })
   } catch (err) {

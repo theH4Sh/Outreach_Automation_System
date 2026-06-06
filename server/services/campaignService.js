@@ -5,6 +5,7 @@ const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
 const runCampaign = require('./campaignRunner/runCampaign')
 const validateObjectId = require('../utils/validateObjectId')
+const retryFailed = require('./campaignRunner/retryFailed')
 
 const createCampaignService = async ({ name, description, message, leads }) => {
     if (!Array.isArray(leads)) {
@@ -128,6 +129,31 @@ const deleteCampaignService = async (id) => {
     return campaign
 }
 
+const retryFailedLeadsService = async (campaignId, runId) => {
+    validateObjectId(campaignId, 'Invalid campaign ID')
+    validateObjectId(runId, 'Invalid run ID')
+
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+        throw new AppError('Campaign not found', 404)
+    }
+
+    const failedLogs = await Log.find({
+        campaignId,
+        runId,
+        success: false
+    })
+
+    const failedUsernames = failedLogs.map(log => {return { 
+        username: log.username,
+        name: log.name
+    }})
+
+    console.log('Failed usernames: ', failedUsernames)
+
+    retryFailed(campaign, failedUsernames)
+}
+
 module.exports = {
     createCampaignService,
     getCampaignsService,
@@ -136,5 +162,6 @@ module.exports = {
     updateCampaignService,
     runCampaign,
     updateCampaignStatusService,
-    deleteCampaignService
+    deleteCampaignService,
+    retryFailedLeadsService
 }

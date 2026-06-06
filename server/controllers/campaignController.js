@@ -10,7 +10,8 @@ const {
     getCampaignLogsService,
     updateCampaignService,
     updateCampaignStatusService,
-    deleteCampaignService
+    deleteCampaignService,
+    retryFailedLeadsService
 } = require('../services/campaignService');
 
 // Create a new campaign
@@ -71,6 +72,15 @@ const updateCampaignStatus = catchAsync(async (req, res) => {
     res.status(200).json(campaign);
 });
 
+const retryFailedLeads = catchAsync(async (req, res) => {
+    const campaignId = req.params.id;
+    const { runId } = req.query;
+
+    const campaign = await retryFailedLeadsService(campaignId, runId)
+
+    res.status(200).json(campaign)
+})
+
 module.exports = {
     createCampaign,
     getCampaigns,
@@ -78,5 +88,6 @@ module.exports = {
     getCampaignLogs,
     updateCampaign,
     updateCampaignStatus,
-    deleteCampaign
+    deleteCampaign,
+    retryFailedLeads
 }

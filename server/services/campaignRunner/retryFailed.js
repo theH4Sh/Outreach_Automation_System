@@ -9,26 +9,22 @@ const logger = require('../../utils/campaignLogger')
 
 const mongoose = require('mongoose')
 
-const runCampaign = async (campaign) => {
+const retryFailed = async (campaign, failedLeads) => {
     const runId = new mongoose.Types.ObjectId() // unique identifier for each run, used for logging and helpful for retry functionality
-    const leads = await loadLeads(campaign)
+    const leads = failedLeads //failed leads override the original leads, so we can retry only the failed ones
     const browser = await createBrowser();
     try {
         const page = await browser.newPage();
+        console.log('Retrying failed leads: ', leads)
 
-        for (let i = campaign.progress; i < leads.length; i++) {
+        for (let i = 0; i < leads.length; i++) {
             const freshCampaign = await Campaign.findById(campaign._id);
-
-            if (!freshCampaign || freshCampaign.status !== 'active') {
-                console.log('Campaign stopped at index: ', i);
-                return
-            }
 
             const message = compileTemplate(campaign.message, leads[i])
 
-            const result = await sendDM(page, leads[i], message);
+            console.log("message: ", message)
 
-            const progress = i + 1
+            const result = await sendDM(page, leads[i], message);
 
             logger.emit('log', {
                 campaignId: campaign._id,
@@ -39,16 +35,13 @@ const runCampaign = async (campaign) => {
                 message: result.message
             })
 
+            progress = i + 1
+
             logger.emit('progress', {
                 campaignId: campaign._id,
-                progress: progress,
+                progress: i + 1,
                 total: leads.length,
                 percentage: Math.round((progress / leads.length) * 100)
-            })
-
-            // save progress after each DM
-            await Campaign.findByIdAndUpdate(campaign._id, {
-                progress
             })
         }
 
@@ -66,4 +59,4 @@ const runCampaign = async (campaign) => {
     }
 };
 
-module.exports = runCampaign;
+module.exports = retryFailed
