@@ -5,7 +5,11 @@ const campaignSchema = new mongoose.Schema({
   description: { type: String },
   message: { type: String },
   leads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lead' }],
-  status: { type: String, enum: ['active', 'inactive', 'completed'], default: 'inactive' },
+  status: { type: String, enum: ['active', 'inactive', 'completed', 'scheduled'], default: 'inactive' },
+  scheduledAt: {
+    type: Date,
+    default: null
+  },
   progress: { type: Number, default: 0 }
 }, { timestamps: true });
 

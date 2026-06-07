@@ -8,6 +8,8 @@ const { Server } = require("socket.io")
 const campaignLogger = require('./utils/campaignLogger')
 const Log = require('./model/Log')
 
+const scheduler = require('./services/campaignRunner/scheduler')
+
 const port = process.env.PORT || 4000;
 const mongoUri = process.env.MONGODB_URI;
 
@@ -47,6 +49,9 @@ campaignLogger.on('log', async (data) => {
     console.log("Failed to save log to database", err)
   }
 })
+
+// Start the campaign scheduler
+scheduler();
 
 campaignLogger.on('progress', (data) => {
   io.emit('campaign-progress', data)

@@ -161,6 +161,27 @@ const retryFailedLeadsService = async (campaignId, runId) => {
     }
 }
 
+const scheduleCampaignService = async (campaignId, scheduledAt) => {
+    validateObjectId(campaignId, 'Invalid campaign ID')
+
+    const campaign = await Campaign.findById(campaignId);
+
+    if (!campaign) {
+        throw new AppError('Campaign not found', 404)
+    }
+
+    if (campaign.status === 'active') {
+        throw new AppError('Cannot schedule an active campaign', 400)
+    }
+
+    campaign.scheduledAt = new Date(scheduledAt);
+    campaign.status = 'scheduled';
+
+    await campaign.save();
+
+    return campaign
+}
+
 module.exports = {
     createCampaignService,
     getCampaignsService,
@@ -170,5 +191,6 @@ module.exports = {
     runCampaign,
     updateCampaignStatusService,
     deleteCampaignService,
-    retryFailedLeadsService
+    retryFailedLeadsService,
+    scheduleCampaignService
 }

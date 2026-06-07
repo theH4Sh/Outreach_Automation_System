@@ -11,7 +11,8 @@ const {
     updateCampaignService,
     updateCampaignStatusService,
     deleteCampaignService,
-    retryFailedLeadsService
+    retryFailedLeadsService,
+    scheduleCampaignService
 } = require('../services/campaignService');
 
 // Create a new campaign
@@ -81,6 +82,15 @@ const retryFailedLeads = catchAsync(async (req, res) => {
     res.status(200).json(result)
 })
 
+const scheduleCampaign = catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { scheduledAt } = req.body;
+
+    const campaign = await scheduleCampaignService(id, scheduledAt);
+
+    res.status(200).json(campaign);
+});
+
 module.exports = {
     createCampaign,
     getCampaigns,
@@ -89,5 +99,6 @@ module.exports = {
     updateCampaign,
     updateCampaignStatus,
     deleteCampaign,
-    retryFailedLeads
+    retryFailedLeads,
+    scheduleCampaign
 }
