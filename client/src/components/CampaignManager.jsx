@@ -1,22 +1,41 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router'
 import useFetch from '../hooks/useFetch'
+import ScheduleModal from './ScheduleModal'
 
 const CampaignManager = () => {
   const { data: campaigns, loading: campaignsLoading } = useFetch('http://localhost:4000/api/campaigns', 'GET')
   const [message, setMessage] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
   const [localCampaigns, setLocalCampaigns] = useState(campaigns)
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
+  const [scheduleCampaignTarget, setScheduleCampaignTarget] = useState(null)
 
   useEffect(() => {
     if (campaigns) setLocalCampaigns(campaigns)
   }, [campaigns])
+
+  const openScheduleModal = (campaign) => {
+    setScheduleCampaignTarget(campaign)
+    setScheduleModalOpen(true)
+  }
+
+  const closeScheduleModal = () => {
+    setScheduleCampaignTarget(null)
+    setScheduleModalOpen(false)
+  }
+
+  const handleScheduled = (updated) => {
+    setLocalCampaigns((prev) => prev.map((c) => (c._id === updated._id ? updated : c)))
+    setMessage({ type: 'success', text: 'Campaign scheduled successfully.' })
+  }
 
   const summary = useMemo(() => {
     const items = localCampaigns || []
     return {
       total: items.length,
       active: items.filter((item) => item.status === 'active').length,
+      scheduled: items.filter((item) => item.status === 'scheduled').length,
       completed: items.filter((item) => item.status === 'completed').length,
       inactive: items.filter((item) => item.status === 'inactive').length,
     }
@@ -72,6 +91,7 @@ const CampaignManager = () => {
 
   const statusClasses = (status) => {
     if (status === 'active') return 'bg-emerald-100 text-emerald-700'
+    if (status === 'scheduled') return 'bg-blue-100 text-blue-700'
     if (status === 'completed') return 'bg-sky-100 text-sky-700'
     return 'bg-slate-100 text-slate-700'
   }
@@ -84,7 +104,7 @@ const CampaignManager = () => {
             <p className="text-sm uppercase tracking-[0.35em] text-slate-500">Campaign manager</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-900">Track campaigns in one place</h2>
           </div>
-          <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-3">
+          <div className="grid w-full gap-3 sm:w-auto sm:grid-cols-4">
             <div className="rounded-3xl bg-slate-50 p-4 text-center">
               <p className="text-sm text-slate-500">Total</p>
               <p className="mt-2 text-2xl font-semibold text-slate-900">{summary.total}</p>
@@ -92,6 +112,10 @@ const CampaignManager = () => {
             <div className="rounded-3xl bg-emerald-50 p-4 text-center">
               <p className="text-sm text-slate-500">Active</p>
               <p className="mt-2 text-2xl font-semibold text-emerald-700">{summary.active}</p>
+            </div>
+            <div className="rounded-3xl bg-blue-50 p-4 text-center">
+              <p className="text-sm text-slate-500">Scheduled</p>
+              <p className="mt-2 text-2xl font-semibold text-blue-700">{summary.scheduled}</p>
             </div>
             <div className="rounded-3xl bg-sky-50 p-4 text-center">
               <p className="text-sm text-slate-500">Completed</p>
@@ -137,6 +161,12 @@ const CampaignManager = () => {
                     <p className="text-sm text-slate-500">Lead count</p>
                     <p className="mt-2 text-xl font-semibold text-slate-900">{campaign.leads?.length ?? 0}</p>
                   </div>
+                  {campaign.status === 'scheduled' && campaign.scheduledAt && (
+                    <div className="rounded-3xl bg-blue-50 p-4 sm:col-span-2">
+                      <p className="text-sm text-blue-500">Scheduled for</p>
+                      <p className="mt-2 text-xl font-semibold text-blue-700">{new Date(campaign.scheduledAt).toLocaleString()}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -159,6 +189,42 @@ const CampaignManager = () => {
                         className="inline-flex flex-1 items-center justify-center rounded-2xl bg-amber-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {updatingId === campaign._id ? 'Updating…' : 'Pause'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => openScheduleModal(campaign)}
+                      disabled={updatingId === campaign._id}
+                      className="inline-flex flex-1 items-center justify-center rounded-2xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {campaign.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
+                    </button>
+                    {campaign.status === 'scheduled' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setMessage(null)
+                          setUpdatingId(campaign._id)
+                          try {
+                            const res = await fetch(`http://localhost:4000/api/campaign/${campaign._id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ status: 'inactive', scheduledAt: null }),
+                            })
+                            if (!res.ok) throw new Error('Failed to cancel schedule')
+                            const updated = await res.json()
+                            setLocalCampaigns((prev) => prev.map((c) => (c._id === updated._id ? updated : c)))
+                            setMessage({ type: 'success', text: 'Schedule canceled.' })
+                          } catch (err) {
+                            setMessage({ type: 'error', text: err.message || 'Unable to cancel schedule.' })
+                          } finally {
+                            setUpdatingId(null)
+                          }
+                        }}
+                        disabled={updatingId === campaign._id}
+                        className="inline-flex flex-1 items-center justify-center rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Cancel
                       </button>
                     )}
                     <button
@@ -187,6 +253,12 @@ const CampaignManager = () => {
           <p className="mt-3">Create a campaign to see it appear here, then manage status and progress from the dashboard.</p>
         </div>
       )}
+      <ScheduleModal
+        isOpen={scheduleModalOpen}
+        campaign={scheduleCampaignTarget}
+        onClose={closeScheduleModal}
+        onScheduled={handleScheduled}
+      />
     </div>
   )
 }
