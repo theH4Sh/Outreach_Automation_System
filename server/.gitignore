@@ -1,4 +1,6 @@
 auth.json
+pauth.json
+ig-prof
 .env
 node_modules
 *.csv

@@ -5,6 +5,7 @@ const navItems = [
   { label: 'Dashboard', path: '/' },
   { label: 'Upload Leads', path: '/upload' },
   { label: 'Scraper', path: '/scraper' },
+  { label: 'Integrations', path: '/integrations' },
   { label: 'Create Campaign', path: '/create-campaign' },
   { label: 'Campaign Manager', path: '/campaigns' },
 ]

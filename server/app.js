@@ -6,6 +6,7 @@ const cors = require('cors')
 const campaignRoutes = require('./routes/campaignRoutes');
 const leadRoutes = require('./routes/leadRoutes')
 const scraperRoutes = require('./routes/scraperRoutes')
+const integrationRoutes = require('./routes/integrationRoutes')
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -19,6 +20,7 @@ app.use("/files", express.static(path.join(__dirname, "files")));
 app.use('/api', campaignRoutes);
 app.use('/api', leadRoutes)
 app.use('/api', scraperRoutes)
+app.use('/api', integrationRoutes)
 
 //error handling middleware
 app.use(errorHandler);
