@@ -1,6 +1,7 @@
 auth.json
 pauth.json
 ig-prof
+profiles/*
 .env
 node_modules
 *.csv
