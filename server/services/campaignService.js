@@ -16,7 +16,6 @@ const createCampaignService = async ({ name, description, message, leads, browse
     for (const lead of leads) {
         validateObjectId(lead, 'Invalid lead ID');
     }
-
     //check the existence of leads
     const existingLeads = await Lead.find({
         _id: { $in: leads }
@@ -26,23 +25,25 @@ const createCampaignService = async ({ name, description, message, leads, browse
         throw new AppError('One or more leads not found', 404);
     }
 
+    validateObjectId(browserProfile, 'Invalid browser profile ID');
+
     const browserProfileExists = await BrowserProfile.findById(browserProfile);
     if (!browserProfileExists) {
         throw new AppError('Browser profile not found', 404);
     }
 
-    const campaign = new Campaign({ name, description, message, leads });
+    const campaign = new Campaign({ name, description, message, leads, browserProfile });
     return await campaign.save();
 }
 
 const getCampaignsService = async () => {
-    return await Campaign.find();
+    return await Campaign.find().populate('browserProfile').populate('leads')
 }
 
 const getCampaignByIdService = async (id) => {
     validateObjectId(id, 'Invalid campaign ID')
 
-    const campaign = await Campaign.findById(id)
+    const campaign = await Campaign.findById(id).populate('browserProfile').populate('leads')
     if (!campaign) {
         throw new AppError ('Campaign not found', 404)
     }
