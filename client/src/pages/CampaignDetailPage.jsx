@@ -178,6 +178,11 @@ const CampaignDetailPage = () => {
                 <span className={`inline-flex items-center rounded-3xl px-4 py-2 text-sm font-semibold ${statusBadge(displayedCampaign.status)}`}>
                   Status: <span className="ml-2 text-slate-900">{displayedCampaign.status}</span>
                 </span>
+                {displayedCampaign.browserProfile && (
+                  <span className="inline-flex items-center rounded-3xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                    Profile: <span className="ml-2 text-slate-900">{displayedCampaign.browserProfile.profileName || displayedCampaign.browserProfile}</span>
+                  </span>
+                )}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <button
                     type="button"

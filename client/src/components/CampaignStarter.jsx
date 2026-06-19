@@ -6,11 +6,12 @@ import usePost from '../hooks/usePost'
 const CampaignStarter = () => {
   const [refreshKey, setRefreshKey] = useState(0)
   const { data: leads, loading: leadsLoading } = useFetch(`http://localhost:4000/api/leads?refresh=${refreshKey}`, 'GET')
+  const { data: profilesResponse, loading: profilesLoading } = useFetch('http://localhost:4000/api/getProfiles/', 'GET')
   const { post: createCampaign, loading: submitting } = usePost('http://localhost:4000/api/campaign')
   const { upload: uploadLead, loading: uploadingLead } = useFileUpload('http://localhost:4000/api/lead')
   const fileInputRef = useRef(null)
 
-  const [form, setForm] = useState({ name: '', description: '', message: '', leads: [] })
+  const [form, setForm] = useState({ name: '', description: '', message: '', leads: [], browserProfile: '' })
   const [message, setMessage] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
 
@@ -18,6 +19,7 @@ const CampaignStarter = () => {
     () => leads?.filter((lead) => form.leads.includes(lead._id)).map((lead) => lead.name) || [],
     [leads, form.leads],
   )
+  const profiles = profilesResponse?.profiles || []
 
   const toggleLead = (leadId) => {
     setForm((prev) => {
@@ -63,10 +65,15 @@ const CampaignStarter = () => {
       return
     }
 
+    if (!form.browserProfile) {
+      setMessage({ type: 'error', text: 'Select a browser profile to use for this campaign.' })
+      return
+    }
+
     try {
       await createCampaign(form)
       setMessage({ type: 'success', text: 'Campaign created and ready to launch.' })
-      setForm({ name: '', description: '', message: '', leads: [] })
+      setForm({ name: '', description: '', message: '', leads: [], browserProfile: '' })
     } catch (err) {
       setMessage({ type: 'error', text: err.message || err || 'Something went wrong.' })
     }
@@ -146,6 +153,29 @@ const CampaignStarter = () => {
                   rows="5"
                   className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
                 />
+              </label>
+
+              <label className="space-y-2 text-sm font-medium text-slate-700">
+                <span>Browser profile</span>
+                <select
+                  name="browserProfile"
+                  value={form.browserProfile}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
+                >
+                  <option value="" disabled>
+                    {profilesLoading ? 'Loading profiles…' : 'Select a profile'}
+                  </option>
+                  {profiles.map((profile) => (
+                    <option key={profile._id} value={profile._id}>
+                      {profile.profileName || profile._id}
+                    </option>
+                  ))}
+                </select>
+                {!profilesLoading && profiles.length === 0 && (
+                  <p className="text-xs text-red-600">Add an integration profile first in Integrations.</p>
+                )}
               </label>
             </div>
           </div>
