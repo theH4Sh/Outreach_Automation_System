@@ -1,5 +1,6 @@
 const Lead = require('../model/Lead')
 const Campaign = require('../model/Campaign');
+const BrowserProfile = require('../model/BrowserProfile');
 const Log = require('../model/Log');
 const AppError = require('../utils/AppError');
 const mongoose = require('mongoose');
@@ -7,7 +8,7 @@ const runCampaign = require('./campaignRunner/runCampaign')
 const validateObjectId = require('../utils/validateObjectId')
 const retryFailed = require('./campaignRunner/retryFailed')
 
-const createCampaignService = async ({ name, description, message, leads }) => {
+const createCampaignService = async ({ name, description, message, leads, browserProfile }) => {
     if (!Array.isArray(leads)) {
         throw new AppError('Lead must be an array', 400);
     }
@@ -23,6 +24,11 @@ const createCampaignService = async ({ name, description, message, leads }) => {
 
     if (existingLeads.length !== leads.length) {
         throw new AppError('One or more leads not found', 404);
+    }
+
+    const browserProfileExists = await BrowserProfile.findById(browserProfile);
+    if (!browserProfileExists) {
+        throw new AppError('Browser profile not found', 404);
     }
 
     const campaign = new Campaign({ name, description, message, leads });

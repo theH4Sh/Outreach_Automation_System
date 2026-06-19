@@ -10,6 +10,7 @@ const campaignSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  browserProfile: { type: mongoose.Schema.Types.ObjectId, ref: 'BrowserProfile' },
   progress: { type: Number, default: 0 }
 }, { timestamps: true });
 

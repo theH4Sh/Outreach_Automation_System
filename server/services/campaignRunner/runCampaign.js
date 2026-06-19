@@ -12,7 +12,7 @@ const mongoose = require('mongoose')
 const runCampaign = async (campaign) => {
     const runId = new mongoose.Types.ObjectId() // unique identifier for each run, used for logging and helpful for retry functionality
     const leads = await loadLeads(campaign)
-    const browser = await createBrowser();
+    const browser = await createBrowser(campaign.browserProfile);
     try {
         const page = await browser.newPage();
 

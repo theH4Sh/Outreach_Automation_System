@@ -12,7 +12,7 @@ const mongoose = require('mongoose')
 const retryFailed = async (campaign, failedLeads) => {
     const runId = new mongoose.Types.ObjectId() // unique identifier for each run, used for logging and helpful for retry functionality
     const leads = failedLeads //failed leads override the original leads, so we can retry only the failed ones
-    const browser = await createBrowser();
+    const browser = await createBrowser(campaign.browserProfile);
     try {
         const page = await browser.newPage();
         console.log('Retrying failed leads: ', leads)
