@@ -11,6 +11,8 @@ import LeadScraper from './pages/LeadScraper'
 import Integrations from './pages/Integrations'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import { useSelector } from 'react-redux'
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
       <>
         <Route path="login" element={ !auth.isAuthenticated ? <Login /> : <Navigate to='/' />} />
         <Route path="signup" element={ !auth.isAuthenticated ? <SignUp /> : <Navigate to='/' />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:token" element={<ResetPassword />} />
       <Route path="/" element={<RootLayout />}>
         <Route index element={ auth.isAuthenticated ? <Home /> : <Navigate to='/login' />} />
         <Route path="upload" element={ auth.isAuthenticated ? <UploadLeadPage /> : <Navigate to='/' />} />

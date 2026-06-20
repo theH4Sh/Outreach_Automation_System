@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
+export default function ResetPassword() {
+  const { token } = useParams();
+  const navigate = useNavigate();
+
+  const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -14,23 +18,25 @@ export default function ForgotPassword() {
 
     try {
       const res = await fetch(
-        import.meta.env.VITE_API + "auth/forgot-password",
+        `${import.meta.env.VITE_API}auth/reset-password/${token}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ newPassword }),
         }
       );
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Request failed");
+        throw new Error(data.error || "Reset failed");
       }
 
       setMessage(data.message);
+
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,22 +50,22 @@ export default function ForgotPassword() {
         onSubmit={handleSubmit}
         className="bg-slate-50 shadow-2xl rounded-2xl max-w-sm w-full md:w-96 p-8 space-y-6"
       >
-        <h1 className="text-2xl font-semibold mb-4">Forgot Password</h1>
+        <h1 className="text-2xl font-semibold mb-4">Reset Password</h1>
 
         <input
-          type="email"
-          placeholder="Enter your email"
+          type="password"
+          placeholder="New password"
           className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
           required
         />
 
         <button
-          className="w-full bg-[#0B7C56] hover:bg-[#095c40] cursor-pointer text-white py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
+          className="w-full bg-[#0B7C56] hover:bg-[#095c40] text-white py-2 rounded-lg cursor-pointer hover:opacity-90 disabled:opacity-50"
           disabled={loading}
         >
-          {loading ? "Sending..." : "Send Reset Link"}
+          {loading ? "Resetting..." : "Reset Password"}
         </button>
 
         {message && <p className="text-green-600 mt-3">{message}</p>}
