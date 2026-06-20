@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
 
 export default function useFetch (url, method) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
+    // prefer token from Redux store, fallback to localStorage
+    const reduxToken = useSelector((state) => state?.auth?.token)
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true)
             setError(null)
 
-            // try to read token from localStorage (set at login)
-            let token = null
-            try {
-                const auth = JSON.parse(localStorage.getItem('auth'))
-                token = auth?.token || null
-            } catch (e) {
-                token = null
+            let token = reduxToken || null
+            if (!token) {
+                try {
+                    const auth = JSON.parse(localStorage.getItem('auth'))
+                    token = auth?.token || null
+                } catch (e) {
+                    token = null
+                }
             }
 
             const headers = {
@@ -47,7 +52,7 @@ export default function useFetch (url, method) {
         }
 
         fetchData()
-    }, [url, method])
+    }, [url, method, reduxToken])
 
     return { data, loading, error }
 }

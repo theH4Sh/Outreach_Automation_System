@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useSelector } from 'react-redux';
 
 export default function useFileUpload(url) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [success, setSuccess] = useState(false)
+
+    const reduxToken = useSelector((state) => state?.auth?.token)
 
     const upload = async (file) => {
         setLoading(true)
@@ -14,13 +17,14 @@ export default function useFileUpload(url) {
             const formData = new FormData()
             formData.append('file', file)
 
-            // try to read token from localStorage (set at login)
-            let token = null
-            try {
-                const auth = JSON.parse(localStorage.getItem('auth'))
-                token = auth?.token || null
-            } catch (e) {
-                token = null
+            let token = reduxToken || null
+            if (!token) {
+                try {
+                    const auth = JSON.parse(localStorage.getItem('auth'))
+                    token = auth?.token || null
+                } catch (e) {
+                    token = null
+                }
             }
 
             const headers = {}
