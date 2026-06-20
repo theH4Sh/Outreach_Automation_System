@@ -25,7 +25,7 @@ const uploadLead = async (req, res, next) => {
 const getLeads = async (req, res, next) => {
     try {
         const userId = req.user._id
-        const leads = await (await Lead.find({ user: userId })).toSorted({ createdAt: -1 })
+        const leads = await Lead.find({ user: userId }).sort({ createdAt: -1 })
         res.status(200).json(leads)
     } catch (err) {
         next(err)
@@ -41,8 +41,8 @@ const getLeadById = async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid lead ID' })
         }
 
-        const lead = await Lead.fineOne({
-            id: id,
+        const lead = await Lead.findOne({
+            _id: id,
             user: userId
         })
         if (!lead) {
@@ -64,7 +64,7 @@ const deleteLead = async (req, res, next) => {
         }
 
         const lead = await Lead.findOneAndDelete({
-            id: id,
+            _id: id,
             user: userId
         })
         if (!lead) {
