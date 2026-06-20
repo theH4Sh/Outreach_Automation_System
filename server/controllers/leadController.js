@@ -5,11 +5,13 @@ const fs = require('fs').promises
 
 const uploadLead = async (req, res, next) => {
     try {
+        const userId = req.user._id
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' })
         }
 
         const lead = new Lead({
+            user: userId,
             name: req.file.originalname,
             location: req.file.path
         })
@@ -22,7 +24,8 @@ const uploadLead = async (req, res, next) => {
 
 const getLeads = async (req, res, next) => {
     try {
-        const leads = await Lead.find()
+        const userId = req.user._id
+        const leads = await (await Lead.find({ user: userId })).toSorted({ createdAt: -1 })
         res.status(200).json(leads)
     } catch (err) {
         next(err)
@@ -32,12 +35,16 @@ const getLeads = async (req, res, next) => {
 const getLeadById = async (req, res, next) => {
     try {
         const id = req.params.id
+        const userId = req.user._id
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid lead ID' })
         }
 
-        const lead = await Lead.findById(id)
+        const lead = await Lead.fineOne({
+            id: id,
+            user: userId
+        })
         if (!lead) {
             return res.status(404).json({ error: 'Lead not found' })
         }
@@ -50,12 +57,16 @@ const getLeadById = async (req, res, next) => {
 const deleteLead = async (req, res, next) => {
     try {
         const id = req.params.id
+        const userId = req.user._id
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid lead ID' })
         }
 
-        const lead = await Lead.findByIdAndDelete(id)
+        const lead = await Lead.findOneAndDelete({
+            id: id,
+            user: userId
+        })
         if (!lead) {
             return res.status(404).json({ error: 'Lead not found' })
         }
