@@ -11,9 +11,20 @@ export default function usePost(url) {
         setSuccess(false)
 
         try {
+            let token = null
+            try {
+                const auth = JSON.parse(localStorage.getItem('auth'))
+                token = auth?.token || null
+            } catch (e) {
+                token = null
+            }
+
+            const headers = { 'Content-Type': 'application/json' }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(data)
             })
 

@@ -14,8 +14,21 @@ export default function useFileUpload(url) {
             const formData = new FormData()
             formData.append('file', file)
 
+            // try to read token from localStorage (set at login)
+            let token = null
+            try {
+                const auth = JSON.parse(localStorage.getItem('auth'))
+                token = auth?.token || null
+            } catch (e) {
+                token = null
+            }
+
+            const headers = {}
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
             const res = await fetch(url, {
                 method: 'POST',
+                headers,
                 body: formData
             })
 
