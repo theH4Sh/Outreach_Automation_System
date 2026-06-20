@@ -7,6 +7,7 @@ const campaignRoutes = require('./routes/campaignRoutes');
 const leadRoutes = require('./routes/leadRoutes')
 const scraperRoutes = require('./routes/scraperRoutes')
 const integrationRoutes = require('./routes/integrationRoutes')
+const userRoutes = require('./routes/userRoutes')
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -21,6 +22,7 @@ app.use('/api', campaignRoutes);
 app.use('/api', leadRoutes)
 app.use('/api', scraperRoutes)
 app.use('/api', integrationRoutes)
+app.use('/api/auth', userRoutes)
 
 //error handling middleware
 app.use(errorHandler);
