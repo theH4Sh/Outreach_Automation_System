@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
 
+const normalizeResponse = (json) => {
+    if (Array.isArray(json)) return json
+    if (json && typeof json === 'object' && json._id) return json
+    if (json && typeof json === 'object' && Array.isArray(json.leads)) return json.leads
+    return json
+}
+
 export default function useFetch (url, method) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
-    // prefer token from Redux store, fallback to localStorage
     const reduxToken = useSelector((state) => state?.auth?.token)
 
     useEffect(() => {
@@ -19,29 +25,23 @@ export default function useFetch (url, method) {
                 try {
                     const auth = JSON.parse(localStorage.getItem('auth'))
                     token = auth?.token || null
-                } catch (e) {
+                } catch {
                     token = null
                 }
             }
 
-            const headers = {
-                'Content-Type': 'application/json'
-            }
+            const headers = { 'Content-Type': 'application/json' }
             if (token) headers['Authorization'] = `Bearer ${token}`
 
             try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers
-                })
+                const res = await fetch(url, { method, headers })
                 const json = await res.json()
 
                 if (!res.ok) {
                     setError(json)
-                    // ensure data consumers expecting arrays don't crash
-                    setData(Array.isArray(json) ? json : (Array.isArray(json?.leads) ? json.leads : []))
+                    setData(normalizeResponse(json) ?? [])
                 } else {
-                    setData(Array.isArray(json) ? json : (Array.isArray(json?.leads) ? json.leads : json))
+                    setData(normalizeResponse(json))
                 }
             } catch (err) {
                 setError(err)

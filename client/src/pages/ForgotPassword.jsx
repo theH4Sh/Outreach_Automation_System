@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router";
+import AuthLayout from '../components/AuthLayout';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -13,23 +15,13 @@ export default function ForgotPassword() {
     setError("");
 
     try {
-      const res = await fetch(
-        import.meta.env.VITE_API + "auth/forgot-password",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        }
-      );
-
+      const res = await fetch(import.meta.env.VITE_API + "auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Request failed");
-      }
-
+      if (!res.ok) throw new Error(data.message || "Request failed");
       setMessage(data.message);
     } catch (err) {
       setError(err.message);
@@ -39,32 +31,40 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-slate-50 shadow-2xl rounded-2xl max-w-sm w-full md:w-96 p-8 space-y-6"
-      >
-        <h1 className="text-2xl font-semibold mb-4">Forgot Password</h1>
+    <AuthLayout title="Forgot password?" subtitle="We'll send you a reset link">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            className="input-field"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          type="email"
-          placeholder="Enter your email"
-          className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-
-        <button
-          className="w-full bg-[#0B7C56] hover:bg-[#095c40] cursor-pointer text-white py-2 rounded-lg hover:opacity-90 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? "Sending..." : "Send Reset Link"}
+        <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+          {loading ? "Sending…" : "Send Reset Link"}
         </button>
 
-        {message && <p className="text-green-600 mt-3">{message}</p>}
-        {error && <p className="text-red-600 mt-3">{error}</p>}
+        {message && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {message}
+          </div>
+        )}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
       </form>
-    </div>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">← Back to sign in</Link>
+      </p>
+    </AuthLayout>
   );
 }

@@ -80,8 +80,8 @@ const CampaignStarter = () => {
   }
 
   return (
-    <div className="w-full max-w-5xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-      <div className="mb-8 rounded-[1.5rem] bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 p-8 text-white shadow-lg">
+    <div className="w-full max-w-5xl mx-auto space-y-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-dark p-8 text-white">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
             <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Campaign flow</p>
@@ -126,7 +126,7 @@ const CampaignStarter = () => {
                   onChange={handleChange}
                   required
                   placeholder="Ex: Summer Blast 2026"
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
+                  className="input-field"
                 />
               </label>
 
@@ -138,7 +138,7 @@ const CampaignStarter = () => {
                   onChange={handleChange}
                   placeholder="Short summary for internal tracking"
                   rows="3"
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
+                  className="input-field resize-none"
                 />
               </label>
 
@@ -151,7 +151,7 @@ const CampaignStarter = () => {
                   required
                   placeholder="What your audience will receive"
                   rows="5"
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
+                  className="input-field resize-none"
                 />
               </label>
 
@@ -162,7 +162,7 @@ const CampaignStarter = () => {
                   value={form.browserProfile}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
+                  className="input-field"
                 >
                   <option value="" disabled>
                     {profilesLoading ? 'Loading profiles…' : 'Select a profile'}
@@ -221,7 +221,7 @@ const CampaignStarter = () => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting || leadsLoading}
-                className="rounded-3xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                className="btn-primary disabled:opacity-50"
               >
                 {submitting ? 'Creating...' : 'Create campaign'}
               </button>

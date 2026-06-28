@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import AuthLayout from '../components/AuthLayout';
 
 export default function ResetPassword() {
   const { token } = useParams();
   const navigate = useNavigate();
-
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -17,25 +17,14 @@ export default function ResetPassword() {
     setError("");
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API}auth/reset-password/${token}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ newPassword }),
-        }
-      );
-
+      const res = await fetch(`${import.meta.env.VITE_API}auth/reset-password/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Reset failed");
-      }
-
+      if (!res.ok) throw new Error(data.error || "Reset failed");
       setMessage(data.message);
-
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.message);
@@ -45,32 +34,40 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-slate-50 shadow-2xl rounded-2xl max-w-sm w-full md:w-96 p-8 space-y-6"
-      >
-        <h1 className="text-2xl font-semibold mb-4">Reset Password</h1>
+    <AuthLayout title="Set new password" subtitle="Choose a strong password for your account">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-1.5">New password</label>
+          <input
+            id="newPassword"
+            type="password"
+            placeholder="••••••••"
+            className="input-field"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          type="password"
-          placeholder="New password"
-          className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-        />
-
-        <button
-          className="w-full bg-[#0B7C56] hover:bg-[#095c40] text-white py-2 rounded-lg cursor-pointer hover:opacity-90 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? "Resetting..." : "Reset Password"}
+        <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+          {loading ? "Resetting…" : "Reset Password"}
         </button>
 
-        {message && <p className="text-green-600 mt-3">{message}</p>}
-        {error && <p className="text-red-600 mt-3">{error}</p>}
+        {message && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {message}
+          </div>
+        )}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
       </form>
-    </div>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">← Back to sign in</Link>
+      </p>
+    </AuthLayout>
   );
 }
