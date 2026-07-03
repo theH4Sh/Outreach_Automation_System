@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { logout } from '../slice/authSlice'
 import toast from 'react-hot-toast'
 
@@ -48,17 +48,17 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block text-right">
+          <Link to="/settings" className="hidden sm:block text-right transition hover:opacity-80">
             <p className="text-sm font-semibold text-slate-900">{username}</p>
             <p className="text-[10px] uppercase tracking-widest text-slate-400">{role}</p>
-          </div>
+          </Link>
 
-          <div className="relative">
+          <Link to="/settings" className="relative" title="Account settings">
             <div className="absolute -inset-0.5 rounded-full bg-gradient-brand opacity-60 blur-sm" />
             <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-dark text-sm font-bold text-white">
               {initials}
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={handleLogout}

@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import SettingsPage from './pages/SettingsPage'
 import { useSelector } from 'react-redux'
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
           <Route path="integrations" element={auth.isAuthenticated ? <Integrations /> : <Navigate to='/' />} />
           <Route path="campaigns" element={auth.isAuthenticated ? <CampaignManagerPage /> : <Navigate to='/' />} />
           <Route path="campaigns/:id" element={auth.isAuthenticated ? <CampaignDetailPage /> : <Navigate to='/' />} />
+          <Route path="settings" element={auth.isAuthenticated ? <SettingsPage /> : <Navigate to='/login' />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </>

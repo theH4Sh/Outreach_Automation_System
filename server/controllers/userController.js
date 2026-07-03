@@ -2,6 +2,7 @@ const User = require('../model/userModel')
 const jwt = require('jsonwebtoken')
 const transporter = require('../utils/mailer')
 const bcrypt = require('bcrypt')
+const validator = require('validator')
 
 const createToken = (user) => {
     return jwt.sign({
@@ -143,4 +144,114 @@ const resetPassword = async (req, res, next) => {
         next(error)
     }
 }
-module.exports = { loginUser, signUpUser, getUser, verifyEmail, forgotPassword, resetPassword }
+
+const getProfile = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password')
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' })
+        }
+
+        res.status(200).json(user)
+    } catch (error) {
+        next(error)
+    }
+}
+
+const updateProfile = async (req, res, next) => {
+    try {
+        const { username, email } = req.body
+        const user = await User.findById(req.user._id)
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' })
+        }
+
+        if (username !== undefined && username !== user.username) {
+            if (!username || username.length < 3) {
+                return res.status(400).json({ error: 'Username must be at least 3 characters long' })
+            }
+
+            const existingUsername = await User.findOne({ username })
+            if (existingUsername) {
+                return res.status(400).json({ error: 'Username already taken' })
+            }
+
+            user.username = username
+        }
+
+        if (email !== undefined && email !== user.email) {
+            if (!email || !validator.isEmail(email)) {
+                return res.status(400).json({ error: 'Invalid email address' })
+            }
+
+            const existingEmail = await User.findOne({ email })
+            if (existingEmail) {
+                return res.status(400).json({ error: 'Email already in use' })
+            }
+
+            user.email = email
+            user.isVerified = false
+        }
+
+        await user.save()
+
+        const token = createToken(user)
+
+        res.status(200).json({
+            message: 'Profile updated successfully',
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            isVerified: user.isVerified,
+            createdAt: user.createdAt,
+            token,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+const changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current and new password are required' })
+        }
+
+        const user = await User.findById(req.user._id)
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' })
+        }
+
+        const match = await bcrypt.compare(currentPassword, user.password)
+        if (!match) {
+            return res.status(400).json({ error: 'Current password is incorrect' })
+        }
+
+        if (!validator.isStrongPassword(newPassword)) {
+            return res.status(400).json({ error: 'Password not strong enough' })
+        }
+
+        const salt = await bcrypt.genSalt(10)
+        user.password = await bcrypt.hash(newPassword, salt)
+        await user.save()
+
+        res.status(200).json({ message: 'Password updated successfully' })
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports = {
+    loginUser,
+    signUpUser,
+    getUser,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
+    getProfile,
+    updateProfile,
+    changePassword,
+}

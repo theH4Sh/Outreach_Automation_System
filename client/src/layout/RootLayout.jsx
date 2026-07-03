@@ -57,6 +57,15 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    label: 'Account Settings',
+    path: '/settings',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
 ]
 
 const pageTitles = {
@@ -66,6 +75,7 @@ const pageTitles = {
   '/integrations': { title: 'Integrations', subtitle: 'Connect your social accounts' },
   '/create-campaign': { title: 'Create Campaign', subtitle: 'Build and launch your next outreach' },
   '/campaigns': { title: 'Campaign Manager', subtitle: 'Monitor and control all campaigns' },
+  '/settings': { title: 'Account Settings', subtitle: 'Manage your profile and security' },
 }
 
 const RootLayout = () => {
