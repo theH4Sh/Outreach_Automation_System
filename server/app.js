@@ -9,6 +9,7 @@ const scraperRoutes = require('./routes/scraperRoutes')
 const integrationRoutes = require('./routes/integrationRoutes')
 const userRoutes = require('./routes/userRoutes')
 const adminRoutes = require('./routes/adminRoutes')
+const templateRoutes = require('./routes/templateRoutes')
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -25,6 +26,7 @@ app.use('/api', scraperRoutes)
 app.use('/api', integrationRoutes)
 app.use('/api/auth', userRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api', templateRoutes)
 
 //error handling middleware
 app.use(errorHandler);

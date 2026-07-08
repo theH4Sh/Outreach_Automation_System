@@ -14,6 +14,18 @@ const quickActions = [
     ),
   },
   {
+    to: '/templates',
+    label: 'Message Templates',
+    title: 'Reusable message templates',
+    description: 'Save outreach copy with {name} and {username} personalization.',
+    gradient: 'from-fuchsia-500 to-pink-600',
+    icon: (
+      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+  },
+  {
     to: '/create-campaign',
     label: 'Create Campaign',
     title: 'Launch a new campaign',

@@ -1,9 +1,14 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
+import { Link } from 'react-router'
+import { useSelector } from 'react-redux'
 import useFetch from '../hooks/useFetch'
 import useFileUpload from '../hooks/useFileUpload'
 import usePost from '../hooks/usePost'
+import { apiFetch } from '../utils/api'
+import { buildSampleData, compileTemplate, extractTemplateVariables } from '../utils/templateUtils'
 
 const CampaignStarter = () => {
+  const { token } = useSelector((state) => state.auth)
   const [refreshKey, setRefreshKey] = useState(0)
   const { data: leads, loading: leadsLoading } = useFetch(`http://localhost:4000/api/leads?refresh=${refreshKey}`, 'GET')
   const { data: profilesResponse, loading: profilesLoading } = useFetch('http://localhost:4000/api/getProfiles/', 'GET')
@@ -11,9 +16,35 @@ const CampaignStarter = () => {
   const { upload: uploadLead, loading: uploadingLead } = useFileUpload('http://localhost:4000/api/lead')
   const fileInputRef = useRef(null)
 
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(true)
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+
   const [form, setForm] = useState({ name: '', description: '', message: '', leads: [], browserProfile: '' })
   const [message, setMessage] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setTemplatesLoading(true)
+      try {
+        const res = await apiFetch(`${import.meta.env.VITE_API}templates`, {}, token)
+        const data = await res.json()
+        if (res.ok) setTemplates(data)
+      } catch {
+        setTemplates([])
+      } finally {
+        setTemplatesLoading(false)
+      }
+    }
+    if (token) loadTemplates()
+  }, [token])
+
+  const messageVariables = useMemo(() => extractTemplateVariables(form.message), [form.message])
+  const messagePreview = useMemo(
+    () => (form.message ? compileTemplate(form.message, buildSampleData()) : ''),
+    [form.message]
+  )
 
   const selectedLeadNames = useMemo(
     () => leads?.filter((lead) => form.leads.includes(lead._id)).map((lead) => lead.name) || [],
@@ -35,6 +66,19 @@ const CampaignStarter = () => {
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    if (name === 'message') setSelectedTemplateId('')
+  }
+
+  const handleTemplateSelect = (e) => {
+    const templateId = e.target.value
+    setSelectedTemplateId(templateId)
+
+    if (!templateId) return
+
+    const template = templates.find((t) => t._id === templateId)
+    if (template) {
+      setForm((prev) => ({ ...prev, message: template.content }))
+    }
   }
 
   const handleUpload = async () => {
@@ -74,6 +118,7 @@ const CampaignStarter = () => {
       await createCampaign(form)
       setMessage({ type: 'success', text: 'Campaign created and ready to launch.' })
       setForm({ name: '', description: '', message: '', leads: [], browserProfile: '' })
+      setSelectedTemplateId('')
     } catch (err) {
       setMessage({ type: 'error', text: err.message || err || 'Something went wrong.' })
     }
@@ -143,16 +188,53 @@ const CampaignStarter = () => {
               </label>
 
               <label className="space-y-2 text-sm font-medium text-slate-700">
-                <span>Campaign message</span>
+                <div className="flex items-center justify-between">
+                  <span>Campaign message</span>
+                  <Link to="/templates" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                    Manage templates →
+                  </Link>
+                </div>
+
+                <select
+                  value={selectedTemplateId}
+                  onChange={handleTemplateSelect}
+                  className="input-field"
+                >
+                  <option value="">
+                    {templatesLoading ? 'Loading templates…' : 'Start from scratch or pick a template'}
+                  </option>
+                  {templates.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </select>
+
                 <textarea
                   name="message"
                   value={form.message}
                   onChange={handleChange}
                   required
-                  placeholder="What your audience will receive"
+                  placeholder="Hey {name}, loved your content! Use {username} for personalization."
                   rows="5"
                   className="input-field resize-none"
                 />
+
+                {messageVariables.length > 0 && (
+                  <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 space-y-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {messageVariables.map((v) => (
+                        <span key={v} className="rounded-full bg-white px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 ring-1 ring-indigo-100">
+                          {'{'}{v}{'}'}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      <span className="font-semibold text-slate-700">Preview: </span>
+                      {messagePreview}
+                    </p>
+                  </div>
+                )}
               </label>
 
               <label className="space-y-2 text-sm font-medium text-slate-700">
