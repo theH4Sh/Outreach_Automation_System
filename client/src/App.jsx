@@ -14,10 +14,12 @@ import SignUp from './pages/SignUp'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import SettingsPage from './pages/SettingsPage'
+import AdminPage from './pages/AdminPage'
 import { useSelector } from 'react-redux'
 
 function App() {
   const auth = useSelector((state) => state.auth);
+  const isAdmin = auth.role === 'admin'
 
   const router = createBrowserRouter(
     createRoutesFromElements(
@@ -35,6 +37,7 @@ function App() {
           <Route path="campaigns" element={auth.isAuthenticated ? <CampaignManagerPage /> : <Navigate to='/' />} />
           <Route path="campaigns/:id" element={auth.isAuthenticated ? <CampaignDetailPage /> : <Navigate to='/' />} />
           <Route path="settings" element={auth.isAuthenticated ? <SettingsPage /> : <Navigate to='/login' />} />
+          <Route path="admin" element={auth.isAuthenticated && isAdmin ? <AdminPage /> : <Navigate to='/' />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </>

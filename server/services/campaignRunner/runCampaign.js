@@ -6,11 +6,16 @@ const Campaign = require('../../model/Campaign')
 
 const compileTemplate = require('../../utils/compileTemplate')
 const logger = require('../../utils/campaignLogger')
+const resolveCampaignOperator = require('../../utils/resolveCampaignOperator')
 
 const mongoose = require('mongoose')
 
-const runCampaign = async (campaign) => {
-    const runId = new mongoose.Types.ObjectId() // unique identifier for each run, used for logging and helpful for retry functionality
+const runCampaign = async (campaign, operator = null) => {
+    const runId = new mongoose.Types.ObjectId()
+    const owner = await resolveCampaignOperator(campaign._id, operator)
+    const sentBy = owner?.username || 'Unknown'
+    const sentById = owner?._id || null
+
     const leads = await loadLeads(campaign)
     const browser = await createBrowser(campaign.browserProfile);
     try {
@@ -35,6 +40,8 @@ const runCampaign = async (campaign) => {
                 runId: runId,
                 success: result.success,
                 username: result.username,
+                sentBy,
+                sentById,
                 name: leads[i].name,
                 message: result.message
             })

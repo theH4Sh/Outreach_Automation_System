@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router'
 import { useCallback, useEffect, useState } from 'react'
 import useFetch from '../hooks/useFetch'
 import { socket } from '../socket'
+import { apiFetch } from '../utils/api'
 
 const CampaignDetailPage = () => {
   const { id } = useParams()
@@ -81,9 +82,8 @@ const CampaignDetailPage = () => {
     const newStatus = campaignToUpdate.status === 'active' ? 'inactive' : 'active'
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${id}/status`, {
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
 
@@ -104,7 +104,7 @@ const CampaignDetailPage = () => {
     setRetrying(true)
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${id}/retry?runId=${latestFailedRunId}`, {
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/retry?runId=${latestFailedRunId}`, {
         method: 'POST',
       })
 

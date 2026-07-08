@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import useFetch from '../hooks/useFetch'
 import ScheduleModal from './ScheduleModal'
 import DeleteCampaignModal from './DeleteCampaignModal'
+import { apiFetch } from '../utils/api'
 
 const CampaignManager = () => {
   const { data: campaigns, loading: campaignsLoading } = useFetch('http://localhost:4000/api/campaigns', 'GET')
@@ -88,9 +89,8 @@ const CampaignManager = () => {
     setUpdatingId(campaignId)
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${campaignId}/status`, {
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaignId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
 

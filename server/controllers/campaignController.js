@@ -17,7 +17,10 @@ const {
 
 // Create a new campaign
 const createCampaign = catchAsync(async (req, res) => {
-    const campaign = await createCampaignService(req.body);
+    const campaign = await createCampaignService({
+        ...req.body,
+        createdBy: req.user?._id || null,
+    });
 
     res.status(201).json(campaign);
 })
@@ -67,7 +70,7 @@ const updateCampaignStatus = catchAsync(async (req, res) => {
     const { status } = req.body;
 
     const campaign = await updateCampaignStatusService(
-        id, status
+        id, status, req.user
     )
 
     res.status(200).json(campaign);
@@ -77,7 +80,7 @@ const retryFailedLeads = catchAsync(async (req, res) => {
     const campaignId = req.params.id;
     const { runId } = req.query;
 
-    const result = await retryFailedLeadsService(campaignId, runId)
+    const result = await retryFailedLeadsService(campaignId, runId, req.user)
 
     res.status(200).json(result)
 })

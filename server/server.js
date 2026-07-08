@@ -42,6 +42,8 @@ campaignLogger.on('log', async (data) => {
       runId: data.runId,
       success: data.success,
       username: data.username,
+      sentBy: data.sentBy || null,
+      sentById: data.sentById || null,
       name: data.name,
       message: data.message
     })

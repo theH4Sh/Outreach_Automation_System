@@ -7,8 +7,9 @@ const mongoose = require('mongoose');
 const runCampaign = require('./campaignRunner/runCampaign')
 const validateObjectId = require('../utils/validateObjectId')
 const retryFailed = require('./campaignRunner/retryFailed')
+const resolveCampaignOperator = require('../utils/resolveCampaignOperator')
 
-const createCampaignService = async ({ name, description, message, leads, browserProfile }) => {
+const createCampaignService = async ({ name, description, message, leads, browserProfile, createdBy }) => {
     if (!Array.isArray(leads)) {
         throw new AppError('Lead must be an array', 400);
     }
@@ -32,7 +33,7 @@ const createCampaignService = async ({ name, description, message, leads, browse
         throw new AppError('Browser profile not found', 404);
     }
 
-    const campaign = new Campaign({ name, description, message, leads, browserProfile });
+    const campaign = new Campaign({ name, description, message, leads, browserProfile, createdBy });
     return await campaign.save();
 }
 
@@ -79,7 +80,7 @@ const updateCampaignService = async (id, data) => {
     return campaign;
 }
 
-const updateCampaignStatusService = async (id, status) => {
+const updateCampaignStatusService = async (id, status, operator = null) => {
     validateObjectId(id, 'Invalid campaign ID')
 
     const campaign = await Campaign.findById(id);
@@ -97,17 +98,23 @@ const updateCampaignStatusService = async (id, status) => {
         throw new AppError ('Invalid status value', 400)
     }
 
-    //START
     if (status === 'active' && campaign.status === 'active') {
-
         throw new AppError('Campaign is already active', 400);
     }
 
     campaign.status = status;
+
+    if (status === 'active' && operator?._id) {
+        campaign.lastActivatedBy = operator._id
+        if (!campaign.createdBy) {
+            campaign.createdBy = operator._id
+        }
+    }
+
     await campaign.save();
 
     if (status === 'active') {
-        runCampaign(campaign);
+        runCampaign(campaign, operator);
     }
 
     return campaign
@@ -136,7 +143,7 @@ const deleteCampaignService = async (id) => {
     return campaign
 }
 
-const retryFailedLeadsService = async (campaignId, runId) => {
+const retryFailedLeadsService = async (campaignId, runId, operator = null) => {
     validateObjectId(campaignId, 'Invalid campaign ID')
     validateObjectId(runId, 'Invalid run ID')
 
@@ -158,7 +165,7 @@ const retryFailedLeadsService = async (campaignId, runId) => {
 
     console.log('Failed usernames: ', failedUsernames)
 
-    retryFailed(campaign, failedUsernames)
+    retryFailed(campaign, failedUsernames, operator)
 
     return {
         success: true,

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
+import { useSelector } from 'react-redux'
 import Navbar from '../components/Navbar'
 
 const navItems = [
@@ -68,6 +69,16 @@ const navItems = [
   },
 ]
 
+const adminNavItem = {
+  label: 'Admin Panel',
+  path: '/admin',
+  icon: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    </svg>
+  ),
+}
+
 const pageTitles = {
   '/': { title: 'Dashboard', subtitle: 'Your lead and campaign command center' },
   '/upload': { title: 'Upload Leads', subtitle: 'Import and manage your lead database' },
@@ -76,11 +87,14 @@ const pageTitles = {
   '/create-campaign': { title: 'Create Campaign', subtitle: 'Build and launch your next outreach' },
   '/campaigns': { title: 'Campaign Manager', subtitle: 'Monitor and control all campaigns' },
   '/settings': { title: 'Account Settings', subtitle: 'Manage your profile and security' },
+  '/admin': { title: 'Admin Panel', subtitle: 'Manage users, logs, and system oversight' },
 }
 
 const RootLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { role } = useSelector((state) => state.auth)
+  const sidebarItems = role === 'admin' ? [...navItems, adminNavItem] : navItems
   const pageInfo = pageTitles[location.pathname] ||
     (location.pathname.startsWith('/campaigns/') ? { title: 'Campaign Detail', subtitle: 'Live progress and activity logs' } : null)
 
@@ -118,7 +132,7 @@ const RootLayout = () => {
               </div>
 
               <nav className="space-y-1">
-                {navItems.map((item) => (
+                {sidebarItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
@@ -127,7 +141,11 @@ const RootLayout = () => {
                     className={({ isActive }) =>
                       `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                         isActive
-                          ? 'bg-gradient-brand text-white shadow-lg shadow-indigo-500/25'
+                          ? item.path === '/admin'
+                            ? 'bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25'
+                            : 'bg-gradient-brand text-white shadow-lg shadow-indigo-500/25'
+                          : item.path === '/admin'
+                          ? 'text-red-300 hover:bg-red-500/10 hover:text-red-200'
                           : 'text-slate-400 hover:bg-white/5 hover:text-white'
                       }`
                     }

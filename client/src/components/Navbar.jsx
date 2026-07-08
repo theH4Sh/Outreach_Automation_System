@@ -50,7 +50,9 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
         <div className="flex items-center gap-4">
           <Link to="/settings" className="hidden sm:block text-right transition hover:opacity-80">
             <p className="text-sm font-semibold text-slate-900">{username}</p>
-            <p className="text-[10px] uppercase tracking-widest text-slate-400">{role}</p>
+            <p className="text-[10px] uppercase tracking-widest text-slate-400">
+              {role === 'admin' ? '⚡ Admin' : role}
+            </p>
           </Link>
 
           <Link to="/settings" className="relative" title="Account settings">

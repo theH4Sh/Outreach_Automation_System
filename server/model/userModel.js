@@ -27,6 +27,18 @@ const userSchema = new Schema({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
+    banReason: {
+        type: String,
+        default: null
+    },
+    bannedAt: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true })
 
@@ -81,6 +93,10 @@ userSchema.statics.login = async function (identifier, password) {
 
     if (!user) {
         throw Error('Invalid Username or email')
+    }
+
+    if (user.isBanned) {
+        throw Error('Your account has been banned. Contact support for help.')
     }
 
     const match = await bcrypt.compare(password, user.password)
