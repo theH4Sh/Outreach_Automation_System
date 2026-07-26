@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const validator = require('validator')
+const AppError = require('../utils/AppError')
 
 const Schema = mongoose.Schema
 
@@ -42,35 +43,32 @@ const userSchema = new Schema({
     }
 }, { timestamps: true })
 
-// User SignUp
-
 userSchema.statics.signup = async function(username, email, password) {
-    // validation
-    if(!username || !email || !password) {
-        throw Error('All fields must be filled')
+    if (!username || !email || !password) {
+        throw new AppError('All fields must be filled', 400)
     }
 
     if (username.length < 3) {
-        throw Error('Username must be at least 3 character long')
+        throw new AppError('Username must be at least 3 characters long', 400)
     }
 
     if (!validator.isEmail(email)) {
-        throw Error('Invalid Email')
+        throw new AppError('Invalid email address', 400)
     }
 
     if (!validator.isStrongPassword(password)) {
-        throw Error('Password not strong enough')
+        throw new AppError('Password not strong enough', 400)
     }
 
-    const existingUser = await this.findOne({ $or: [{email}, {username}] })
+    const existingUser = await this.findOne({ $or: [{ email }, { username }] })
 
     if (existingUser) {
-        if (existingUser.email == email) {
-            throw Error("Email already in use")
+        if (existingUser.email === email) {
+            throw new AppError('Email already in use', 409)
         }
 
-        if (existingUser.username == username) {
-            throw Error("Username Already Taken")
+        if (existingUser.username === username) {
+            throw new AppError('Username already taken', 409)
         }
     }
 
@@ -84,24 +82,24 @@ userSchema.statics.signup = async function(username, email, password) {
 
 userSchema.statics.login = async function (identifier, password) {
     if (!identifier || !password) {
-        throw Error("All fields must be filled")
+        throw new AppError('All fields must be filled', 400)
     }
 
     const user = await this.findOne({
-        $or: [ { email: identifier }, { username: identifier }]
+        $or: [{ email: identifier }, { username: identifier }]
     })
 
     if (!user) {
-        throw Error('Invalid Username or email')
+        throw new AppError('Invalid username or email', 401)
     }
 
     if (user.isBanned) {
-        throw Error('Your account has been banned. Contact support for help.')
+        throw new AppError('Your account has been banned. Contact support for help.', 403)
     }
 
     const match = await bcrypt.compare(password, user.password)
-    if(!match) {
-        throw Error('Incorrect Password')
+    if (!match) {
+        throw new AppError('Incorrect password', 401)
     }
 
     return user
