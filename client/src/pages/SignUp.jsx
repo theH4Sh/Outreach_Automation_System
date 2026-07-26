@@ -2,6 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from '../components/AuthLayout';
+import { parseApiError } from '../utils/api';
 
 export default function SignUp() {
   const navigate = useNavigate()
@@ -19,14 +20,12 @@ export default function SignUp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
     })
-      .then((res) => {
+      .then(async (res) => {
+        const data = await res.json()
         if (!res.ok) {
-          return res.json().then((data) => {
-            const firstKey = Object.keys(data)[0]
-            throw new Error(data[firstKey][0])
-          })
+          throw new Error(parseApiError(data, 'Signup failed'))
         }
-        return res.json()
+        return data
       })
       .then(() => {
         toast.success("Account created! Please sign in.")

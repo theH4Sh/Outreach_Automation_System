@@ -1,3 +1,6 @@
+export const parseApiError = (data, fallback = 'Request failed') =>
+  data?.error || data?.message || data?.detail || fallback
+
 export const getAuthHeaders = (token) => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${token}`,

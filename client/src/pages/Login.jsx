@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { useDispatch } from "react-redux"
 import { login } from '../slice/authSlice.js';
 import AuthLayout from '../components/AuthLayout';
+import { parseApiError } from '../utils/api';
 
 export default function Login() {
   const [formData, setFormData] = useState({ identifier: "", password: "" });
@@ -22,11 +23,12 @@ export default function Login() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
     })
-      .then((res) => {
+      .then(async (res) => {
+        const data = await res.json()
         if (!res.ok) {
-          return res.json().then((data) => { throw new Error(data.detail) })
+          throw new Error(parseApiError(data, 'Login failed'))
         }
-        return res.json()
+        return data
       })
       .then((data) => {
         dispatch(login(data))
