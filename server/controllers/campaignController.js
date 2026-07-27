@@ -1,9 +1,5 @@
 const catchAsync = require('../middleware/catchAsync');
-const Campaign = require('../model/Campaign');
-const Lead = require('../model/Lead')
-const mongoose = require('mongoose');
 const {
-    runCampaign,
     createCampaignService,
     getCampaignsService,
     getCampaignByIdService,
@@ -15,81 +11,74 @@ const {
     scheduleCampaignService
 } = require('../services/campaignService');
 
-// Create a new campaign
 const createCampaign = catchAsync(async (req, res) => {
     const campaign = await createCampaignService({
         ...req.body,
-        createdBy: req.user?._id || null,
+        createdBy: req.user._id,
     });
 
     res.status(201).json(campaign);
 })
 
-// Get all campaigns
 const getCampaigns = catchAsync(async (req, res) => {
-    const campaigns = await getCampaignsService();
+    const campaigns = await getCampaignsService(req.user._id);
 
     res.status(200).json(campaigns);
 })
 
-// Get a campaign by ID
 const getCampaignById = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const campaign = await getCampaignByIdService(id)
+    const campaign = await getCampaignByIdService(req.params.id, req.user._id)
 
     res.status(200).json(campaign)
 })
 
-// Update a campaign by ID
 const updateCampaign = catchAsync(async (req, res) => {
     const campaign = await updateCampaignService(
         req.params.id,
-        req.body
+        req.body,
+        req.user._id
     )
 
     res.status(200).json(campaign);
 })
 
-// Delete a campaign by ID
 const deleteCampaign = catchAsync(async (req, res) => {
-    const campaign = await deleteCampaignService(req.params.id)
+    const campaign = await deleteCampaignService(req.params.id, req.user._id)
 
     res.status(200).json(campaign);
 })
 
-// Get campaign logs
 const getCampaignLogs = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const logs = await getCampaignLogsService(id)
+    const logs = await getCampaignLogsService(req.params.id, req.user._id)
     res.status(200).json(logs)
 })
 
-// Update campaign status [active/inactive]
 const updateCampaignStatus = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-
     const campaign = await updateCampaignStatusService(
-        id, status, req.user
+        req.params.id,
+        req.body.status,
+        req.user
     )
 
     res.status(200).json(campaign);
 });
 
 const retryFailedLeads = catchAsync(async (req, res) => {
-    const campaignId = req.params.id;
-    const { runId } = req.query;
-
-    const result = await retryFailedLeadsService(campaignId, runId, req.user)
+    const result = await retryFailedLeadsService(
+        req.params.id,
+        req.query.runId,
+        req.user
+    )
 
     res.status(200).json(result)
 })
 
 const scheduleCampaign = catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const { scheduledAt } = req.body;
-
-    const campaign = await scheduleCampaignService(id, scheduledAt);
+    const campaign = await scheduleCampaignService(
+        req.params.id,
+        req.body.scheduledAt,
+        req.user._id
+    );
 
     res.status(200).json(campaign);
 });

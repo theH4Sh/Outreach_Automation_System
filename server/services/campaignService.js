@@ -3,13 +3,26 @@ const Campaign = require('../model/Campaign');
 const BrowserProfile = require('../model/BrowserProfile');
 const Log = require('../model/Log');
 const AppError = require('../utils/AppError');
-const mongoose = require('mongoose');
 const runCampaign = require('./campaignRunner/runCampaign')
 const validateObjectId = require('../utils/validateObjectId')
 const retryFailed = require('./campaignRunner/retryFailed')
-const resolveCampaignOperator = require('../utils/resolveCampaignOperator')
+
+const getOwnedCampaign = async (id, userId) => {
+    validateObjectId(id, 'Invalid campaign ID')
+
+    const campaign = await Campaign.findOne({ _id: id, createdBy: userId })
+    if (!campaign) {
+        throw new AppError('Campaign not found', 404)
+    }
+
+    return campaign
+}
 
 const createCampaignService = async ({ name, description, message, leads, browserProfile, createdBy }) => {
+    if (!createdBy) {
+        throw new AppError('Authentication required', 401);
+    }
+
     if (!Array.isArray(leads)) {
         throw new AppError('Lead must be an array', 400);
     }
@@ -17,9 +30,10 @@ const createCampaignService = async ({ name, description, message, leads, browse
     for (const lead of leads) {
         validateObjectId(lead, 'Invalid lead ID');
     }
-    //check the existence of leads
+
     const existingLeads = await Lead.find({
-        _id: { $in: leads }
+        _id: { $in: leads },
+        user: createdBy,
     })
 
     if (existingLeads.length !== leads.length) {
@@ -37,32 +51,29 @@ const createCampaignService = async ({ name, description, message, leads, browse
     return await campaign.save();
 }
 
-const getCampaignsService = async () => {
-    return await Campaign.find().populate('browserProfile').populate('leads')
+const getCampaignsService = async (userId) => {
+    return await Campaign.find({ createdBy: userId })
+        .populate('browserProfile')
+        .populate('leads')
+        .sort({ createdAt: -1 })
 }
 
-const getCampaignByIdService = async (id) => {
+const getCampaignByIdService = async (id, userId) => {
     validateObjectId(id, 'Invalid campaign ID')
 
-    const campaign = await Campaign.findById(id).populate('browserProfile').populate('leads')
-    if (!campaign) {
-        throw new AppError ('Campaign not found', 404)
-    }
-
-    return campaign
-}
-
-const updateCampaignService = async (id, data) => {
-    validateObjectId(id, 'Invalid campaign ID')
-
-    const campaign = await Campaign.findById(id);
+    const campaign = await Campaign.findOne({ _id: id, createdBy: userId })
+        .populate('browserProfile')
+        .populate('leads')
 
     if (!campaign) {
         throw new AppError('Campaign not found', 404)
     }
 
-    //campaign.name = data.name || campaign.name;
-    //campaign.description = data.description || campaign.description;
+    return campaign
+}
+
+const updateCampaignService = async (id, data, userId) => {
+    const campaign = await getOwnedCampaign(id, userId);
 
     if (campaign.status === 'active' && data.message) {
         throw new AppError(
@@ -71,9 +82,9 @@ const updateCampaignService = async (id, data) => {
         );
     }
 
-    //campaign.message = data.message || campaign.message;
-
-    Object.assign(campaign, data)
+    // Never allow ownership reassignment through update payloads
+    const { createdBy, ...safeData } = data
+    Object.assign(campaign, safeData)
 
     await campaign.save();
 
@@ -81,13 +92,11 @@ const updateCampaignService = async (id, data) => {
 }
 
 const updateCampaignStatusService = async (id, status, operator = null) => {
-    validateObjectId(id, 'Invalid campaign ID')
-
-    const campaign = await Campaign.findById(id);
-
-    if (!campaign) {
-        throw new AppError('Campaign not found', 404)
+    if (!operator?._id) {
+        throw new AppError('Authentication required', 401)
     }
+
+    const campaign = await getOwnedCampaign(id, operator._id);
 
     const allowedStatuses = [
         'active',
@@ -95,7 +104,7 @@ const updateCampaignStatusService = async (id, status, operator = null) => {
     ]
 
     if (!allowedStatuses.includes(status)) {
-        throw new AppError ('Invalid status value', 400)
+        throw new AppError('Invalid status value', 400)
     }
 
     if (status === 'active' && campaign.status === 'active') {
@@ -104,11 +113,8 @@ const updateCampaignStatusService = async (id, status, operator = null) => {
 
     campaign.status = status;
 
-    if (status === 'active' && operator?._id) {
+    if (status === 'active') {
         campaign.lastActivatedBy = operator._id
-        if (!campaign.createdBy) {
-            campaign.createdBy = operator._id
-        }
     }
 
     await campaign.save();
@@ -120,21 +126,16 @@ const updateCampaignStatusService = async (id, status, operator = null) => {
     return campaign
 }
 
-const getCampaignLogsService = async (id) => {
-    validateObjectId(id, 'Invalid campaign ID')
-
-    const campaign = await Campaign.findById(id);
-    if (!campaign) {
-        throw new AppError('Campaign not found', 404)
-    }
+const getCampaignLogsService = async (id, userId) => {
+    await getOwnedCampaign(id, userId)
 
     return await Log.find({ campaignId: id }).sort({ runId: -1, createdAt: 1 })
 }
 
-const deleteCampaignService = async (id) => {
+const deleteCampaignService = async (id, userId) => {
     validateObjectId(id, 'Invalid campaign ID')
 
-    const campaign = await Campaign.findByIdAndDelete(id);
+    const campaign = await Campaign.findOneAndDelete({ _id: id, createdBy: userId });
 
     if (!campaign) {
         throw new AppError('Campaign not found', 404)
@@ -144,13 +145,13 @@ const deleteCampaignService = async (id) => {
 }
 
 const retryFailedLeadsService = async (campaignId, runId, operator = null) => {
-    validateObjectId(campaignId, 'Invalid campaign ID')
+    if (!operator?._id) {
+        throw new AppError('Authentication required', 401)
+    }
+
     validateObjectId(runId, 'Invalid run ID')
 
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) {
-        throw new AppError('Campaign not found', 404)
-    }
+    const campaign = await getOwnedCampaign(campaignId, operator._id);
 
     const failedLogs = await Log.find({
         campaignId,
@@ -163,8 +164,6 @@ const retryFailedLeadsService = async (campaignId, runId, operator = null) => {
         name: log.name
     }))
 
-    console.log('Failed usernames: ', failedUsernames)
-
     retryFailed(campaign, failedUsernames, operator)
 
     return {
@@ -175,14 +174,8 @@ const retryFailedLeadsService = async (campaignId, runId, operator = null) => {
     }
 }
 
-const scheduleCampaignService = async (campaignId, scheduledAt) => {
-    validateObjectId(campaignId, 'Invalid campaign ID')
-
-    const campaign = await Campaign.findById(campaignId);
-
-    if (!campaign) {
-        throw new AppError('Campaign not found', 404)
-    }
+const scheduleCampaignService = async (campaignId, scheduledAt, userId) => {
+    const campaign = await getOwnedCampaign(campaignId, userId);
 
     if (campaign.status === 'active') {
         throw new AppError('Cannot schedule an active campaign', 400)
