@@ -4,6 +4,7 @@ import useFetch from '../hooks/useFetch'
 import ScheduleModal from './ScheduleModal'
 import DeleteCampaignModal from './DeleteCampaignModal'
 import { apiFetch } from '../utils/api'
+import { socket } from '../socket'
 
 const CampaignManager = () => {
   const { data: campaigns, loading: campaignsLoading, error: campaignsError } = useFetch('http://localhost:4000/api/campaigns', 'GET')
@@ -19,6 +20,21 @@ const CampaignManager = () => {
   useEffect(() => {
     setLocalCampaigns(Array.isArray(campaigns) ? campaigns : [])
   }, [campaigns])
+
+  useEffect(() => {
+    const handleCampaignStatus = (data) => {
+      setLocalCampaigns((prev) =>
+        prev.map((c) =>
+          String(c._id) === String(data.campaignId)
+            ? { ...c, status: data.status, progress: data.progress ?? c.progress }
+            : c
+        )
+      )
+    }
+
+    socket.on('campaign-status', handleCampaignStatus)
+    return () => socket.off('campaign-status', handleCampaignStatus)
+  }, [])
 
   const openScheduleModal = (campaign) => {
     setScheduleCampaignTarget(campaign)

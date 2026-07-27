@@ -52,6 +52,12 @@ const CampaignDetailPage = () => {
   }, [loadLogs])
 
   useEffect(() => {
+    if (campaign && campaign._id) {
+      setCurrentCampaign(campaign)
+    }
+  }, [campaign])
+
+  useEffect(() => {
     if (!id) return
 
     const handleCampaignLog = (data) => {
@@ -62,14 +68,32 @@ const CampaignDetailPage = () => {
     const handleCampaignProgress = (data) => {
       if (String(data.campaignId) !== id) return
       setLiveProgress(data.percentage)
+      if (data.percentage >= 100) {
+        setCurrentCampaign((prev) => (prev ? { ...prev, status: 'completed', progress: 0 } : prev))
+      }
+    }
+
+    const handleCampaignStatus = (data) => {
+      if (String(data.campaignId) !== id) return
+      setCurrentCampaign((prev) => (prev ? {
+        ...prev,
+        status: data.status,
+        progress: data.progress ?? prev.progress,
+      } : prev))
+      if (data.percentage != null) setLiveProgress(data.percentage)
+      if (data.status === 'completed') {
+        setStatusMessage({ type: 'success', text: 'Campaign finished running.' })
+      }
     }
 
     socket.on('campaign-log', handleCampaignLog)
     socket.on('campaign-progress', handleCampaignProgress)
+    socket.on('campaign-status', handleCampaignStatus)
 
     return () => {
       socket.off('campaign-log', handleCampaignLog)
       socket.off('campaign-progress', handleCampaignProgress)
+      socket.off('campaign-status', handleCampaignStatus)
     }
   }, [id])
 
@@ -131,10 +155,16 @@ const CampaignDetailPage = () => {
     }
   }
 
-  const actionLabel = displayedCampaign?.status === 'active' ? 'Pause campaign' : 'Start campaign'
+  const actionLabel = displayedCampaign?.status === 'active'
+    ? 'Pause campaign'
+    : displayedCampaign?.status === 'completed'
+      ? 'Run again'
+      : 'Start campaign'
+
   const statusBadge = (status) => {
     if (status === 'active') return 'bg-emerald-100 text-emerald-700'
     if (status === 'completed') return 'bg-sky-100 text-sky-700'
+    if (status === 'scheduled') return 'bg-indigo-100 text-indigo-700'
     return 'bg-slate-100 text-slate-700'
   }
 

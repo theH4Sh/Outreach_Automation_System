@@ -59,6 +59,10 @@ campaignLogger.on('progress', (data) => {
   io.emit('campaign-progress', data)
 })
 
+campaignLogger.on('status', (data) => {
+  io.emit('campaign-status', data)
+})
+
 httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

@@ -60,10 +60,16 @@ const runCampaign = async (campaign, operator = null) => {
         }
 
         // mark campaign as completed and reset progress
-
         await Campaign.findByIdAndUpdate(campaign._id, {
             status: 'completed',
             progress: 0
+        })
+
+        logger.emit('status', {
+            campaignId: campaign._id,
+            status: 'completed',
+            progress: 0,
+            percentage: 100,
         })
 
     } catch (err) {
