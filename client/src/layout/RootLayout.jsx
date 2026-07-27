@@ -94,8 +94,8 @@ const pageTitles = {
   '/scraper': { title: 'Lead Scraper', subtitle: 'Extract leads from any public page' },
   '/integrations': { title: 'Integrations', subtitle: 'Connect your social accounts' },
   '/templates': { title: 'Message Templates', subtitle: 'Create and manage reusable outreach messages' },
-  '/create-campaign': { title: 'Create Campaign', subtitle: 'Build and launch your next outreach' },
-  '/campaigns': { title: 'Campaign Manager', subtitle: 'Monitor and control all campaigns' },
+  '/create-campaign': { title: 'New Campaign', subtitle: 'Name, message, leads, go' },
+  '/campaigns': { title: 'Campaigns', subtitle: 'Run, pause, schedule' },
   '/settings': { title: 'Account Settings', subtitle: 'Manage your profile and security' },
   '/admin': { title: 'Admin Panel', subtitle: 'Manage users, logs, and system oversight' },
 }
