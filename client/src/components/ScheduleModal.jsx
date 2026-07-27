@@ -1,46 +1,74 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { apiFetch } from '../utils/api'
 
-const formatLocalDateTime = (isoDate) => {
-  if (!isoDate) return ''
-  const date = new Date(isoDate)
-  const tzOffset = date.getTimezoneOffset() * 60000
-  const localIso = new Date(date.getTime() - tzOffset).toISOString()
-  return localIso.slice(0, 16)
+const pad = (n) => String(n).padStart(2, '0')
+
+const toParts = (isoOrLocal) => {
+  if (!isoOrLocal) return { date: '', time: '' }
+  const d = new Date(isoOrLocal)
+  if (Number.isNaN(d.getTime())) return { date: '', time: '' }
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  }
 }
 
+const todayParts = () => toParts(new Date())
+
 const ScheduleModal = ({ isOpen, campaign, onClose, onScheduled }) => {
-  const [scheduledAt, setScheduledAt] = useState('')
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!isOpen) return
-    setScheduledAt(campaign?.scheduledAt ? formatLocalDateTime(campaign.scheduledAt) : '')
+    if (campaign?.scheduledAt) {
+      const parts = toParts(campaign.scheduledAt)
+      setDate(parts.date)
+      setTime(parts.time)
+    } else {
+      const now = new Date()
+      now.setMinutes(now.getMinutes() + 15)
+      const parts = toParts(now)
+      setDate(parts.date)
+      setTime(parts.time)
+    }
   }, [campaign, isOpen])
+
+  const scheduledDate = useMemo(() => {
+    if (!date || !time) return null
+    const d = new Date(`${date}T${time}`)
+    return Number.isNaN(d.getTime()) ? null : d
+  }, [date, time])
+
+  const preview = useMemo(() => {
+    if (!scheduledDate) return ''
+    return scheduledDate.toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  }, [scheduledDate])
 
   if (!isOpen || !campaign) return null
 
+  const minDate = todayParts().date
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!scheduledAt) {
-      toast.error('Choose a date and time to schedule the campaign.')
+    if (!scheduledDate) {
+      toast.error('Pick date & time')
       return
     }
-
-    const scheduledDate = new Date(scheduledAt)
-    if (Number.isNaN(scheduledDate.getTime())) {
-      toast.error('Invalid date format.')
-      return
-    }
-
     if (scheduledDate <= new Date()) {
-      toast.error('Please choose a future schedule time.')
+      toast.error('Must be in the future')
       return
     }
 
     setLoading(true)
-
     try {
       const res = await apiFetch(`http://localhost:4000/api/campaign/${campaign._id}/schedule`, {
         method: 'PATCH',
@@ -49,36 +77,39 @@ const ScheduleModal = ({ isOpen, campaign, onClose, onScheduled }) => {
 
       if (!res.ok) {
         const text = await res.text()
-        throw new Error(text || 'Unable to schedule campaign')
+        throw new Error(text || 'Schedule failed')
       }
 
       const updated = await res.json()
-      toast.success('Campaign scheduled successfully.')
+      toast.success('Queued')
       onScheduled(updated)
       onClose()
     } catch (err) {
-      toast.error(err.message || 'Failed to schedule campaign')
+      toast.error(err.message || 'Schedule failed')
     } finally {
       setLoading(false)
     }
   }
 
-  const now = new Date()
-  now.setMinutes(now.getMinutes() + 1)
-  const minDate = now.toISOString().slice(0, 16)
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 py-6">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-fade-up">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Schedule campaign</h3>
-            <p className="mt-1 text-sm text-slate-500">Pick when this campaign should run automatically.</p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4 py-6"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-slate-900">Schedule</h3>
+            <p className="truncate text-xs text-slate-500">{campaign.name}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -86,31 +117,53 @@ const ScheduleModal = ({ isOpen, campaign, onClose, onScheduled }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Run at</label>
-            <input
-              type="datetime-local"
-              value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
-              min={minDate}
-              className="input-field"
-            />
+        <form onSubmit={handleSubmit} className="space-y-3 p-4">
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold text-slate-600">Date</span>
+              <input
+                type="date"
+                value={date}
+                min={minDate}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10"
+              />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-semibold text-slate-600">Time</span>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10"
+              />
+            </label>
           </div>
 
-          <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 text-sm text-slate-700">
-            <p>Campaign: <span className="font-semibold text-slate-900">{campaign.name}</span></p>
-            {scheduledAt && (
-              <p className="mt-2">Scheduled for: <span className="font-semibold text-indigo-700">{new Date(scheduledAt).toLocaleString()}</span></p>
-            )}
-          </div>
+          {preview && (
+            <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              Runs <span className="font-semibold text-slate-900">{preview}</span>
+            </p>
+          )}
 
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} disabled={loading} className="btn-ghost flex-1 py-3">
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="btn-primary flex-1 py-3">
-              {loading ? 'Scheduling…' : 'Schedule'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {loading ? '…' : 'Queue'}
             </button>
           </div>
         </form>
