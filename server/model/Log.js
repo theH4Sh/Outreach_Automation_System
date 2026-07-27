@@ -18,6 +18,15 @@ const logSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    sentBy: {
+        type: String,
+        default: null
+    },
+    sentById: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
     name: {
         type: String
     },

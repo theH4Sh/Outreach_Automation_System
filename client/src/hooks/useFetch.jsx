@@ -1,22 +1,75 @@
 import { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
+
+const normalizeResponse = (json) => {
+    if (Array.isArray(json)) return json
+    if (json && typeof json === 'object' && json._id) return json
+    if (json && typeof json === 'object' && Array.isArray(json.leads)) return json.leads
+    return json
+}
 
 export default function useFetch (url, method) {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-    
+
+    const reduxToken = useSelector((state) => state?.auth?.token)
+
     useEffect(() => {
-        fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json"
+        const fetchData = async () => {
+            setLoading(true)
+            setError(null)
+
+            let token = reduxToken || null
+            if (!token) {
+                try {
+                    const auth = JSON.parse(localStorage.getItem('auth'))
+                    token = auth?.token || null
+                } catch {
+                    token = null
+                }
             }
-        })
-            .then(res => res.json())
-            .then(data => setData(data))
-            .catch(err => setError(err))
-            .finally(() => setLoading(false))
-    }, [url])
-    
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+            }
+            if (token) headers['Authorization'] = `Bearer ${token}`
+
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers,
+                    cache: 'no-store',
+                })
+
+                const text = await res.text()
+                let json = null
+                if (text) {
+                    try {
+                        json = JSON.parse(text)
+                    } catch {
+                        json = null
+                    }
+                }
+
+                if (!res.ok) {
+                    setError(json || { error: `Request failed (${res.status})` })
+                    setData([])
+                    return
+                }
+
+                setData(normalizeResponse(json) ?? [])
+            } catch (err) {
+                setError(err)
+                setData([])
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [url, method, reduxToken])
+
     return { data, loading, error }
 }

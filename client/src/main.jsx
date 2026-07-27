@@ -2,9 +2,21 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { store } from './store/store.js'
+import { Provider } from 'react-redux'
+import { login } from './slice/authSlice.js';
+
+const authData = JSON.parse(localStorage.getItem('auth'))
+
+if ( authData && authData.token && authData.username && authData.role ) {
+  console.log("Local Storage to Redux Store: ", authData)
+  store.dispatch(login(authData))
+}
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Provider store={store}>
+      <App />
+    </Provider>
   </StrictMode>,
 )

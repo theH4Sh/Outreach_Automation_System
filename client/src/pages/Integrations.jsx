@@ -18,7 +18,6 @@ const Integrations = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to load profiles')
       setProfiles(data.profiles || [])
     } catch (err) {
-      console.error(err)
       const message = err.message || 'Failed to load profiles'
       setProfilesError(message)
       toast.error(message)
@@ -27,13 +26,7 @@ const Integrations = () => {
     }
   }
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      await loadProfiles()
-    }
-
-    fetchProfiles()
-  }, [])
+  useEffect(() => { loadProfiles() }, [])
 
   const handleIntegrate = async () => {
     if (!profileName.trim()) {
@@ -48,18 +41,16 @@ const Integrations = () => {
     try {
       const res = await fetch('http://localhost:4000/api/integrate/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profileName: profileName.trim() })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Integration failed')
       setStatus(`Integration successful for ${profileName.trim()}`)
       toast.success('Integration successful')
+      setProfileName('')
       await loadProfiles()
     } catch (err) {
-      console.error(err)
       const message = err.message || 'Integration failed'
       setStatus(message)
       toast.error(message)
@@ -68,20 +59,18 @@ const Integrations = () => {
     }
   }
 
-  const handleDeleteProfile = async (profileName) => {
+  const handleDeleteProfile = async (name) => {
     setStatus('')
     try {
       const res = await fetch(
-        `http://localhost:4000/api/deleteProfile/${encodeURIComponent(profileName)}`,
+        `http://localhost:4000/api/deleteProfile/${encodeURIComponent(name)}`,
         { method: 'DELETE' }
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Failed to delete profile')
       toast.success(data.message || 'Profile deleted successfully')
-      setStatus(`Deleted profile ${profileName}`)
       await loadProfiles()
     } catch (err) {
-      console.error(err)
       const message = err.message || 'Failed to delete profile'
       setStatus(message)
       toast.error(message)
@@ -89,90 +78,96 @@ const Integrations = () => {
   }
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold">Account Integrations</h3>
-      <p className="text-sm text-slate-600 mb-4">Connect and manage third-party account integrations.</p>
-
-      <div className="space-y-6">
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700">
-            Profile Name
-          </label>
-          <input
-            type="text"
-            value={profileName}
-            onChange={(event) => setProfileName(event.target.value)}
-            placeholder="Enter a unique profile name"
-            className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-slate-900 focus:outline-none"
-          />
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              onClick={handleIntegrate}
-              disabled={loading}
-              className="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-            >
-              {loading ? 'Connecting…' : 'Integrate Instagram Account'}
-            </button>
-            <button
-              onClick={() => { setStatus(''); toast.dismiss() }}
-              className="text-sm text-slate-600"
-            >
-              Clear
-            </button>
+    <div className="space-y-6">
+      {/* Connect card */}
+      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50 to-violet-50 p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-lg">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
           </div>
-        </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-slate-900">Connect Instagram Account</h3>
+            <p className="mt-1 text-sm text-slate-600">Link a browser profile to run automated outreach campaigns.</p>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div>
-              <h4 className="text-sm font-semibold">Saved Profiles</h4>
-              <p className="text-xs text-slate-500">Profiles created by the integration flow.</p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <input
+                type="text"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Enter a unique profile name"
+                className="input-field flex-1"
+              />
+              <button onClick={handleIntegrate} disabled={loading} className="btn-primary shrink-0">
+                {loading ? 'Connecting…' : 'Connect Account'}
+              </button>
             </div>
-            <button
-              onClick={loadProfiles}
-              disabled={profilesLoading}
-              className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-700 disabled:opacity-60"
-            >
-              {profilesLoading ? 'Refreshing…' : 'Refresh'}
-            </button>
           </div>
+        </div>
+      </div>
 
-          {profilesLoading ? (
-            <p className="text-sm text-slate-500">Loading profiles…</p>
-          ) : profilesError ? (
-            <p className="text-sm text-red-600">{profilesError}</p>
-          ) : profiles.length === 0 ? (
-            <p className="text-sm text-slate-500">No connected profiles yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {profiles.map((profile) => (
-                <li
-                  key={profile._id || profile.profileName}
-                  className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div>
-                    <p className="font-medium text-slate-900">{profile.profileName}</p>
-                    <p className="text-xs text-slate-500">Saved profile from integration</p>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteProfile(profile.profileName)}
-                    className="rounded-2xl bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      {/* Profiles list */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-slate-900">Saved Profiles</h3>
+            <p className="text-sm text-slate-500">Profiles created by the integration flow</p>
+          </div>
+          <button onClick={loadProfiles} disabled={profilesLoading} className="btn-ghost text-xs py-1.5 px-3">
+            {profilesLoading ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
 
-        {status && (
-          <div className="rounded-md border border-slate-200 bg-white p-3 text-sm">
-            <strong>Status:</strong> {status}
+        {profilesLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map((i) => <div key={i} className="skeleton h-16" />)}
           </div>
+        ) : profilesError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{profilesError}</div>
+        ) : profiles.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+              <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <p className="font-semibold text-slate-700">No connected profiles yet</p>
+            <p className="mt-1 text-sm text-slate-500">Connect an account above to get started.</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {profiles.map((profile) => (
+              <li
+                key={profile._id || profile.profileName}
+                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white">
+                    {profile.profileName?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{profile.profileName}</p>
+                    <p className="text-xs text-slate-500">Instagram profile</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleDeleteProfile(profile.profileName)}
+                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
+
+      {status && (
+        <div className={`rounded-xl border px-4 py-3 text-sm ${status.includes('successful') || status.includes('Deleted') ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+          {status}
+        </div>
+      )}
     </div>
   )
 }

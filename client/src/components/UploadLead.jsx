@@ -6,9 +6,9 @@ const UploadLead = () => {
   const { upload, loading } = useFileUpload('http://localhost:4000/api/lead')
   const [message, setMessage] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [dragOver, setDragOver] = useState(false)
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0]
+  const handleFileSelect = (file) => {
     if (file) {
       setSelectedFile(file)
       setMessage(null)
@@ -24,7 +24,7 @@ const UploadLead = () => {
 
     try {
       await upload(selectedFile)
-      setMessage({ type: 'success', text: 'Lead uploaded successfully!' })
+      setMessage({ type: 'success', text: 'Leads uploaded successfully!' })
       setSelectedFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err) {
@@ -33,70 +33,79 @@ const UploadLead = () => {
   }
 
   return (
-    <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-500">Upload</p>
-          <h2 className="mt-3 text-2xl font-semibold text-slate-900">Import lead data</h2>
-        </div>
-        <div className="rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">CSV only</div>
-      </div>
-
+    <div className="w-full max-w-2xl mx-auto space-y-6">
       {message && (
-        <div className={`mb-5 rounded-2xl border px-4 py-3 text-sm ${message.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-emerald-50 text-emerald-700'}`}>
+        <div className={`rounded-xl border px-4 py-3 text-sm ${message.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
           {message.text}
         </div>
       )}
 
-      <div className="space-y-5">
-        <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-          <p className="text-sm font-medium text-slate-700">Drag and drop your CSV here, or choose a file.</p>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="mt-4 inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            Select CSV file
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleFileSelect}
-            disabled={loading}
-            className="hidden"
-          />
+      <div
+        className={`relative rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 ${
+          dragOver
+            ? 'border-indigo-400 bg-indigo-50/50 scale-[1.01]'
+            : selectedFile
+            ? 'border-emerald-300 bg-emerald-50/30'
+            : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300 hover:bg-indigo-50/20'
+        }`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragOver(false)
+          handleFileSelect(e.dataTransfer.files?.[0])
+        }}
+      >
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-brand text-white shadow-lg">
+          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
         </div>
 
-        {selectedFile && (
-          <div className="flex flex-col rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-semibold text-slate-900">{selectedFile.name}</p>
-              <p className="text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p>
-            </div>
+        {selectedFile ? (
+          <>
+            <p className="font-semibold text-slate-900">{selectedFile.name}</p>
+            <p className="mt-1 text-sm text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB · CSV</p>
             <button
               type="button"
-              onClick={() => {
-                setSelectedFile(null)
-                if (fileInputRef.current) fileInputRef.current.value = ''
-                setMessage(null)
-              }}
-              className="mt-3 inline-flex rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 sm:mt-0"
+              onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+              className="mt-3 text-sm font-medium text-slate-500 hover:text-slate-700"
             >
-              Change file
+              Choose a different file
             </button>
-          </div>
+          </>
+        ) : (
+          <>
+            <p className="font-semibold text-slate-800">Drop your CSV here</p>
+            <p className="mt-1 text-sm text-slate-500">or click to browse files</p>
+          </>
         )}
 
         <button
           type="button"
-          onClick={handleSubmit}
-          disabled={loading || !selectedFile}
-          className="w-full rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          onClick={() => fileInputRef.current?.click()}
+          className="mt-5 btn-primary"
         >
-          {loading ? 'Uploading...' : 'Upload leads'}
+          Select CSV file
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          onChange={(e) => handleFileSelect(e.target.files?.[0])}
+          disabled={loading}
+          className="hidden"
+        />
       </div>
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={loading || !selectedFile}
+        className="btn-primary w-full py-3"
+      >
+        {loading ? 'Uploading…' : 'Upload leads'}
+      </button>
     </div>
   )
 }

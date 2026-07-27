@@ -11,6 +11,8 @@ const campaignSchema = new mongoose.Schema({
     default: null
   },
   browserProfile: { type: mongoose.Schema.Types.ObjectId, ref: 'BrowserProfile' },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  lastActivatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   progress: { type: Number, default: 0 }
 }, { timestamps: true });
 

@@ -8,10 +8,15 @@ const compileTemplate = require('../../utils/compileTemplate')
 const logger = require('../../utils/campaignLogger')
 
 const mongoose = require('mongoose')
+const resolveCampaignOperator = require('../../utils/resolveCampaignOperator')
 
-const retryFailed = async (campaign, failedLeads) => {
-    const runId = new mongoose.Types.ObjectId() // unique identifier for each run, used for logging and helpful for retry functionality
-    const leads = failedLeads //failed leads override the original leads, so we can retry only the failed ones
+const retryFailed = async (campaign, failedLeads, operator = null) => {
+    const runId = new mongoose.Types.ObjectId()
+    const owner = await resolveCampaignOperator(campaign._id, operator)
+    const sentBy = owner?.username || 'Unknown'
+    const sentById = owner?._id || null
+
+    const leads = failedLeads
     const browser = await createBrowser(campaign.browserProfile);
     try {
         const page = await browser.newPage();
@@ -31,6 +36,8 @@ const retryFailed = async (campaign, failedLeads) => {
                 runId: runId,
                 success: result.success,
                 username: result.username,
+                sentBy,
+                sentById,
                 name: leads[i].name,
                 message: result.message
             })
@@ -46,10 +53,16 @@ const retryFailed = async (campaign, failedLeads) => {
         }
 
         // mark campaign as completed and reset progress
-
         await Campaign.findByIdAndUpdate(campaign._id, {
             status: 'completed',
             progress: 0
+        })
+
+        logger.emit('status', {
+            campaignId: campaign._id,
+            status: 'completed',
+            progress: 0,
+            percentage: 100,
         })
 
     } catch (err) {
