@@ -30,19 +30,36 @@ export default function useFetch (url, method) {
                 }
             }
 
-            const headers = { 'Content-Type': 'application/json' }
+            const headers = {
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+            }
             if (token) headers['Authorization'] = `Bearer ${token}`
 
             try {
-                const res = await fetch(url, { method, headers })
-                const json = await res.json()
+                const res = await fetch(url, {
+                    method,
+                    headers,
+                    cache: 'no-store',
+                })
+
+                const text = await res.text()
+                let json = null
+                if (text) {
+                    try {
+                        json = JSON.parse(text)
+                    } catch {
+                        json = null
+                    }
+                }
 
                 if (!res.ok) {
-                    setError(json)
-                    setData(normalizeResponse(json) ?? [])
-                } else {
-                    setData(normalizeResponse(json))
+                    setError(json || { error: `Request failed (${res.status})` })
+                    setData([])
+                    return
                 }
+
+                setData(normalizeResponse(json) ?? [])
             } catch (err) {
                 setError(err)
                 setData([])

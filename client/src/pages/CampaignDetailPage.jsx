@@ -34,7 +34,7 @@ const CampaignDetailPage = () => {
     if (!id) return
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${id}/logs`)
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/logs`)
       if (!res.ok) return
       const data = await res.json()
       setLogs(data)

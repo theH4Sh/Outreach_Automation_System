@@ -6,10 +6,10 @@ import DeleteCampaignModal from './DeleteCampaignModal'
 import { apiFetch } from '../utils/api'
 
 const CampaignManager = () => {
-  const { data: campaigns, loading: campaignsLoading } = useFetch('http://localhost:4000/api/campaigns', 'GET')
+  const { data: campaigns, loading: campaignsLoading, error: campaignsError } = useFetch('http://localhost:4000/api/campaigns', 'GET')
   const [message, setMessage] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
-  const [localCampaigns, setLocalCampaigns] = useState(campaigns)
+  const [localCampaigns, setLocalCampaigns] = useState([])
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false)
   const [scheduleCampaignTarget, setScheduleCampaignTarget] = useState(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
@@ -17,7 +17,7 @@ const CampaignManager = () => {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    if (campaigns) setLocalCampaigns(campaigns)
+    setLocalCampaigns(Array.isArray(campaigns) ? campaigns : [])
   }, [campaigns])
 
   const openScheduleModal = (campaign) => {
@@ -50,7 +50,7 @@ const CampaignManager = () => {
     setUpdatingId(campaignId)
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${campaignId}`, {
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaignId}`, {
         method: 'DELETE',
       })
 
@@ -74,7 +74,7 @@ const CampaignManager = () => {
   }
 
   const summary = useMemo(() => {
-    const items = localCampaigns || []
+    const items = Array.isArray(localCampaigns) ? localCampaigns : []
     return {
       total: items.length,
       active: items.filter((item) => item.status === 'active').length,
@@ -135,11 +135,17 @@ const CampaignManager = () => {
         </div>
       )}
 
+      {campaignsError && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {campaignsError.error || campaignsError.message || 'Unable to load campaigns. Try signing in again.'}
+        </div>
+      )}
+
       {campaignsLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => <div key={i} className="skeleton h-48" />)}
         </div>
-      ) : localCampaigns && localCampaigns.length > 0 ? (
+      ) : Array.isArray(localCampaigns) && localCampaigns.length > 0 ? (
         <div className="grid gap-4 xl:grid-cols-2">
           {localCampaigns.map((campaign) => (
             <div key={campaign._id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5">
@@ -210,9 +216,8 @@ const CampaignManager = () => {
                           setMessage(null)
                           setUpdatingId(campaign._id)
                           try {
-                            const res = await fetch(`http://localhost:4000/api/campaign/${campaign._id}`, {
+                            const res = await apiFetch(`http://localhost:4000/api/campaign/${campaign._id}`, {
                               method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ status: 'inactive', scheduledAt: null }),
                             })
                             if (!res.ok) throw new Error('Failed to cancel schedule')

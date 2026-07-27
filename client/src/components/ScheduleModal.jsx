@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { apiFetch } from '../utils/api'
 
 const formatLocalDateTime = (isoDate) => {
   if (!isoDate) return ''
@@ -41,9 +42,8 @@ const ScheduleModal = ({ isOpen, campaign, onClose, onScheduled }) => {
     setLoading(true)
 
     try {
-      const res = await fetch(`http://localhost:4000/api/campaign/${campaign._id}/schedule`, {
+      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaign._id}/schedule`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scheduledAt: scheduledDate.toISOString() }),
       })
 
