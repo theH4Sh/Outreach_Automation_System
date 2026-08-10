@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
 
 const Integrations = () => {
@@ -9,11 +10,19 @@ const Integrations = () => {
   const [profilesError, setProfilesError] = useState('')
   const [status, setStatus] = useState('')
 
+  const token = useSelector((state) => state?.auth?.token)
+
   const loadProfiles = async () => {
     setProfilesLoading(true)
     setProfilesError('')
     try {
-      const res = await fetch('http://localhost:4000/api/getProfiles/')
+      const res = await fetch('http://localhost:4000/api/getProfiles/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Failed to load profiles')
       setProfiles(data.profiles || [])
@@ -41,7 +50,10 @@ const Integrations = () => {
     try {
       const res = await fetch('http://localhost:4000/api/integrate/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ profileName: profileName.trim() })
       })
       const data = await res.json()
@@ -59,12 +71,17 @@ const Integrations = () => {
     }
   }
 
-  const handleDeleteProfile = async (name) => {
+  const handleDeleteProfile = async (profileId) => {
     setStatus('')
     try {
       const res = await fetch(
-        `http://localhost:4000/api/deleteProfile/${encodeURIComponent(name)}`,
-        { method: 'DELETE' }
+        `http://localhost:4000/api/deleteProfile/${encodeURIComponent(profileId)}`, { 
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Failed to delete profile')
@@ -152,7 +169,7 @@ const Integrations = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteProfile(profile.profileName)}
+                  onClick={() => handleDeleteProfile(profile._id)}
                   className="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
                 >
                   Remove
