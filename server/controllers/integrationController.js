@@ -18,7 +18,7 @@ const integrateAccount = catchAsync(async (req, res) => {
 
     const newProfile = new BrowserProfile({ profileName, user: userId });
     
-    const session = await integrator(profileName);
+    const session = await integrator(userId, profileName);
     await newProfile.save();
     res.status(200).json({ 
         message: 'Integration successful',
@@ -28,8 +28,9 @@ const integrateAccount = catchAsync(async (req, res) => {
 
 const closeIntegration = catchAsync(async (req, res) => {
     const profileName = req.params.profileName;
+    const userId = req.user._id;
 
-    const stopped = await stopIntegration(profileName);
+    const stopped = await stopIntegration(userId);
 
     if (!stopped) {
         return res.status(404).json({

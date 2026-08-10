@@ -82,7 +82,7 @@ const Integrations = () => {
   const handleCloseBrowser = async () => {
   try {
     const res = await fetch(
-      `http://localhost:4000/api/integrate/${encodeURIComponent(activeProfile)}/session`,
+      `http://localhost:4000/api/integrate/session`,
       {
         method: 'DELETE',
         headers: {

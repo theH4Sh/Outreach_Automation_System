@@ -1,17 +1,16 @@
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
+const sessionManager = require('./sessionManager')
 
+const integrator = async (userId, profileName) => {
+	const session = sessionManager.createSession(userId)
 
-const sessions = new Map()
+	const { display, vncPort, webPort } = session
 
-const integrator = async (profileName) => {
-	const display = 99;
-	const vncPort = 5900;
-	const webPort = 6080;
+	console.log("Created Browser Session: ", session)
 
-	    // Connection lifetime: 10 minutes
+	// Connection lifetime: 10 minutes
     const SESSION_TIMEOUT = 10 * 60 * 1000;
-	//const SESSION_TIMEOUT = 20000
 
 	// Start xvfb
 	const xvfb = spawn('Xvfb', [
@@ -21,9 +20,12 @@ const integrator = async (profileName) => {
 		'1920x1080x24',
 	])
 
+	session.xvfb = xvfb
+
 	xvfb.on('error', (err) => {
 		console.error('Xvfb error:', err)
 	})
+
 	//allowing xvfb to start
 	await new Promise(resolve => setTimeout(resolve, 1000))
 	
@@ -47,18 +49,19 @@ const integrator = async (profileName) => {
 		{ env }
 	);
 
-	x11vnc.stdout.on('data', data => {
-    console.log('[x11vnc]', data.toString());
-	});
+	// x11vnc.stdout.on('data', data => {
+    // console.log('[x11vnc]', data.toString());
+	// });
 
-	x11vnc.stderr.on('data', data => {
-		console.error('[x11vnc]', data.toString());
-	});
+	// x11vnc.stderr.on('data', data => {
+	// 	console.error('[x11vnc]', data.toString());
+	// });
 
-	x11vnc.on('close', code => {
-		console.log(`x11vnc exited with code ${code}`);
-	});
+	// x11vnc.on('close', code => {
+	// 	console.log(`x11vnc exited with code ${code}`);
+	// });
 
+	session.x11vnc = x11vnc
 
 	x11vnc.on('error', (err) => {
 		console.error('x11vnc error:', err)
@@ -75,6 +78,7 @@ const integrator = async (profileName) => {
 		`${webPort}`
 	])
 
+	session.novnc = novnc
 
     novnc.on('error', (err) => {
         console.error('noVNC error:', err);
@@ -103,6 +107,8 @@ const integrator = async (profileName) => {
 				]
 			}
 		);
+
+		session.browser = browser
 		
 		const page = await browser.newPage();
 
@@ -128,34 +134,28 @@ const integrator = async (profileName) => {
 
 		//browser.close()
 
-		sessions.set(profileName, {
-			browser,
-			xvfb,
-			x11vnc,
-			novnc
-		});
-
 		// Automatically destroy ONLY the connection after 10 minutes
         setTimeout(async () => {
             console.log(`Connection timeout reached for ${profileName}`);
+			await stopIntegration(userId)
 
-            try {
-                await browser.close();
-            } catch (err) {
-                console.error('Browser close error:', err);
-            }
+            // try {
+            //     await browser.close();
+            // } catch (err) {
+            //     console.error('Browser close error:', err);
+            // }
 
-            if (!x11vnc.killed) {
-                x11vnc.kill('SIGTERM');
-            }
+            // if (!x11vnc.killed) {
+            //     x11vnc.kill('SIGTERM');
+            // }
 
-            if (!novnc.killed) {
-                novnc.kill('SIGTERM');
-            }
+            // if (!novnc.killed) {
+            //     novnc.kill('SIGTERM');
+            // }
 
-            if (!xvfb.killed) {
-                xvfb.kill('SIGTERM');
-            }
+            // if (!xvfb.killed) {
+            //     xvfb.kill('SIGTERM');
+            // }
 
             console.log(`Connection ended for ${profileName}`);
         }, SESSION_TIMEOUT);
@@ -169,24 +169,37 @@ const integrator = async (profileName) => {
 	}
 };
 
-const stopIntegration = async (profileName) => {
-    const session = sessions.get(profileName);
+const stopIntegration = async (userId) => {
+	const key = userId.toString()
+    const session = sessionManager.getSession(key);
 
     if (!session) {
         return false;
     }
 
-    console.log(`Stopping integration for ${profileName}`);
+    console.log(`Stopping integration for ${userId}`);
 
     await session.browser.close().catch(() => {});
 
-    session.x11vnc.kill('SIGTERM');
-    session.novnc.kill('SIGTERM');
-    session.xvfb.kill('SIGTERM');
+    if (session.browser) {
+        await session.browser.close().catch(() => {})
+    }
 
-    sessions.delete(profileName);
+    if (session.x11vnc && !session.x11vnc.killed) {
+        session.x11vnc.kill('SIGTERM')
+    }
 
-    console.log(`Integration stopped for ${profileName}`);
+    if (session.novnc && !session.novnc.killed) {
+        session.novnc.kill('SIGTERM')
+    }
+
+    if (session.xvfb && !session.xvfb.killed) {
+        session.xvfb.kill('SIGTERM')
+    }
+
+    sessionManager.deleteSession(key)
+
+    console.log(`Integration stopped for ${userId}`);
 
     return true;
 };

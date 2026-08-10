@@ -7,7 +7,7 @@ const router = express.Router()
 
 router.post('/integrate/', requireAuth, integrateAccount)
 
-router.delete('/integrate/:profileName/session', requireAuth, closeIntegration)
+router.delete('/integrate/session', requireAuth, closeIntegration)
 
 router.get('/getProfiles/', requireAuth, getProfiles)
 
