@@ -29,12 +29,16 @@ const integrator = async (profileName) => {
 		// await page.waitForTimeout(30000);
 		// console.log("URL after login:", page.url());
 
-		const saveInfoBtn = page.locator('button:has-text("Save info")');
+		//// UNCOMMENT BELOW============================
 
-		await saveInfoBtn.waitFor({ state: 'visible', timeout: 0 });
-		await saveInfoBtn.click();
+		// const saveInfoBtn = page.locator('button:has-text("Save info")');
 
-		console.log("Save info clicked");
+		// await saveInfoBtn.waitFor({ state: 'visible', timeout: 0 });
+		// await saveInfoBtn.click();
+
+		// console.log("Save info clicked");
+
+		//================================================
 
 		// await page.context().storageState({ path: 'pauth.json' });
 		// console.log('Auth state saved successfully')
