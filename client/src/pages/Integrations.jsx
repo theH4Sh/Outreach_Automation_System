@@ -9,6 +9,10 @@ const Integrations = () => {
   const [profilesLoading, setProfilesLoading] = useState(false)
   const [profilesError, setProfilesError] = useState('')
   const [status, setStatus] = useState('')
+  const [showBrowser, setShowBrowser] = useState(false)
+  const [remoteUrl, setRemoteUrl] = useState('')
+  const [activeProfile, setActiveProfile] = useState('')
+
 
   const token = useSelector((state) => state?.auth?.token)
 
@@ -60,6 +64,10 @@ const Integrations = () => {
       if (!res.ok) throw new Error(data.message || 'Integration failed')
       setStatus(`Integration successful for ${profileName.trim()}`)
       toast.success('Integration successful')
+      setShowBrowser(true)
+      console.log("remote url: ", data.url)
+      setRemoteUrl(data.url)
+      setActiveProfile(profileName.trim())
       setProfileName('')
       await loadProfiles()
     } catch (err) {
@@ -70,6 +78,33 @@ const Integrations = () => {
       setLoading(false)
     }
   }
+
+  const handleCloseBrowser = async () => {
+  try {
+    const res = await fetch(
+      `http://localhost:4000/api/integrate/${encodeURIComponent(activeProfile)}/session`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to close browser')
+    }
+
+    toast.success('Browser session closed')
+
+    setShowBrowser(false)
+    setRemoteUrl('')
+  } catch (err) {
+    toast.error(err.message || 'Failed to close browser')
+  }
+}
 
   const handleDeleteProfile = async (profileId) => {
     setStatus('')
@@ -123,6 +158,30 @@ const Integrations = () => {
           </div>
         </div>
       </div>
+
+      {/* Remote Browser */}
+      {showBrowser && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-black">
+          <div className="flex items-center justify-between bg-slate-900 px-4 py-3">
+            <span className="font-semibold text-white">
+              Instagram Browser
+            </span>
+
+            <button
+              onClick={handleCloseBrowser}
+              className="text-sm text-slate-400 hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+
+          <iframe
+            src={remoteUrl}
+            title="Remote Instagram Browser"
+            className="h-[700px] w-full border-0"
+          />
+        </div>
+      )}
 
       {/* Profiles list */}
       <div>

@@ -1,4 +1,4 @@
-const integrator = require('../engine/integrator');
+const {integrator, stopIntegration} = require('../engine/integrator');
 const catchAsync = require('../middleware/catchAsync')
 const BrowserProfile = require('../model/BrowserProfile')
 const validateObjectId = require('../utils/validateObjectId');
@@ -18,10 +18,29 @@ const integrateAccount = catchAsync(async (req, res) => {
 
     const newProfile = new BrowserProfile({ profileName, user: userId });
     
-    await integrator(profileName);
+    const session = await integrator(profileName);
     await newProfile.save();
-    res.status(200).json({ message: 'Integration successful' })
+    res.status(200).json({ 
+        message: 'Integration successful',
+        url: session.url
+    })
 });
+
+const closeIntegration = catchAsync(async (req, res) => {
+    const profileName = req.params.profileName;
+
+    const stopped = await stopIntegration(profileName);
+
+    if (!stopped) {
+        return res.status(404).json({
+            message: 'No active integration foud'
+        })
+    }
+
+    res.status(200).json({
+        message: 'Integration session closed'
+    })
+})
 
 const getProfiles = catchAsync(async (req, res) => {
     const userId = req.user._id;
@@ -45,6 +64,7 @@ const deleteProfile = catchAsync(async (req, res) => {
 
 module.exports = {
     integrateAccount,
+    closeIntegration,
     getProfiles,
     deleteProfile
 }
