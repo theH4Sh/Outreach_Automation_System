@@ -1,8 +1,10 @@
+const crypto = require('crypto')
+
 const sessions = new Map()
 
 let nextDisplay = 99;
 let nextVncPort = 5900;
-let nextWebPort = 6080;
+// let nextWebPort = 6080;
 
 const createSession = (userId) => {
     const key = userId.toString()
@@ -11,10 +13,12 @@ const createSession = (userId) => {
     }
 
     const session = {
-        userId,
+        sessionId: crypto.randomUUID(),
+        userId: key,
+
         display: nextDisplay++,
         vncPort: nextVncPort++,
-        webPort: nextWebPort++,
+        // webPort: nextWebPort++,
 
         xvfb: null,
         x11vnc: null,
@@ -28,15 +32,26 @@ const createSession = (userId) => {
 }
 
 const getSession = (userId) => {
-    return sessions.get(userId)
+    return sessions.get(userId.toString())
 }
 
 const deleteSession = (userId) => {
-    return sessions.delete(userId)
+    return sessions.delete(userId.toString())
+}
+
+const getSessionById = (sessionId) => {
+    for (const session of sessions.values()) {
+        if (session.sessionId === sessionId) {
+            return session;
+        }
+    }
+
+    return null;
 }
 
 module.exports = {
     createSession,
     getSession,
-    deleteSession
+    deleteSession,
+    getSessionById
 }

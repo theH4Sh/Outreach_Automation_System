@@ -22,7 +22,8 @@ const integrateAccount = catchAsync(async (req, res) => {
     await newProfile.save();
     res.status(200).json({ 
         message: 'Integration successful',
-        url: session.url
+        sessionId: session.sessionId,
+        //url: session.url
     })
 });
 

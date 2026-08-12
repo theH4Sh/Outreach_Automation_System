@@ -5,7 +5,7 @@ const sessionManager = require('./sessionManager')
 const integrator = async (userId, profileName) => {
 	const session = sessionManager.createSession(userId)
 
-	const { display, vncPort, webPort } = session
+	const { display, vncPort } = session
 
 	console.log("Created Browser Session: ", session)
 
@@ -49,18 +49,6 @@ const integrator = async (userId, profileName) => {
 		{ env }
 	);
 
-	// x11vnc.stdout.on('data', data => {
-    // console.log('[x11vnc]', data.toString());
-	// });
-
-	// x11vnc.stderr.on('data', data => {
-	// 	console.error('[x11vnc]', data.toString());
-	// });
-
-	// x11vnc.on('close', code => {
-	// 	console.log(`x11vnc exited with code ${code}`);
-	// });
-
 	session.x11vnc = x11vnc
 
 	x11vnc.on('error', (err) => {
@@ -71,20 +59,20 @@ const integrator = async (userId, profileName) => {
 
 	// Start noVNC
 
-	const novnc = spawn('novnc', [
-		'--vnc',
-		`localhost:${vncPort}`,
-		'--listen',
-		`${webPort}`
-	])
+	// const novnc = spawn('novnc', [
+	// 	'--vnc',
+	// 	`localhost:${vncPort}`,
+	// 	'--listen',
+	// 	`${webPort}`
+	// ])
 
-	session.novnc = novnc
+	// session.novnc = novnc
 
-    novnc.on('error', (err) => {
-        console.error('noVNC error:', err);
-    });
+    // novnc.on('error', (err) => {
+    //     console.error('noVNC error:', err);
+    // });
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // await new Promise(resolve => setTimeout(resolve, 1000));
 
 	try {
 		const browser = await chromium.launchPersistentContext(
@@ -161,7 +149,8 @@ const integrator = async (userId, profileName) => {
         }, SESSION_TIMEOUT);
 
 		return {
-			url: `http://localhost:${webPort}/vnc.html?autoconnect=true&resize=scale`
+			// url: `http://localhost:${webPort}/vnc.html?autoconnect=true&resize=scale`,
+			sessionId: session.sessionId
 		}
 	} catch (error) {
 		console.error('Integration failed:', error);
@@ -170,8 +159,7 @@ const integrator = async (userId, profileName) => {
 };
 
 const stopIntegration = async (userId) => {
-	const key = userId.toString()
-    const session = sessionManager.getSession(key);
+    const session = sessionManager.getSession(userId);
 
     if (!session) {
         return false;
@@ -197,7 +185,7 @@ const stopIntegration = async (userId) => {
         session.xvfb.kill('SIGTERM')
     }
 
-    sessionManager.deleteSession(key)
+    sessionManager.deleteSession(userId)
 
     console.log(`Integration stopped for ${userId}`);
 

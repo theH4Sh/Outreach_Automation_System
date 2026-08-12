@@ -63,6 +63,8 @@ campaignLogger.on('status', (data) => {
   io.emit('campaign-status', data)
 })
 
+require('./engine/websocket/browserSocket');
+
 httpServer.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
