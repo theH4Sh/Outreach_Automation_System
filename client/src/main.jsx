@@ -14,9 +14,7 @@ if ( authData && authData.token && authData.username && authData.role ) {
 }
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
     <Provider store={store}>
       <App />
-    </Provider>
-  </StrictMode>,
+    </Provider>,
 )

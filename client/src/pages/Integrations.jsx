@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
+import RemoteBrowser from '../components/RemoteBrowser'
 
 const Integrations = () => {
   const [loading, setLoading] = useState(false)
@@ -10,8 +11,8 @@ const Integrations = () => {
   const [profilesError, setProfilesError] = useState('')
   const [status, setStatus] = useState('')
   const [showBrowser, setShowBrowser] = useState(false)
-  const [remoteUrl, setRemoteUrl] = useState('')
   const [activeProfile, setActiveProfile] = useState('')
+  const [sessionId, setSessionId] = useState(null)
 
 
   const token = useSelector((state) => state?.auth?.token)
@@ -65,8 +66,7 @@ const Integrations = () => {
       setStatus(`Integration successful for ${profileName.trim()}`)
       toast.success('Integration successful')
       setShowBrowser(true)
-      console.log("remote url: ", data.url)
-      setRemoteUrl(data.url)
+      setSessionId(data.sessionId)
       setActiveProfile(profileName.trim())
       setProfileName('')
       await loadProfiles()
@@ -175,10 +175,13 @@ const Integrations = () => {
             </button>
           </div>
 
-          <iframe
-            src={remoteUrl}
-            title="Remote Instagram Browser"
-            className="h-[700px] w-full border-0"
+          <RemoteBrowser
+              sessionId={sessionId}
+              token={token}
+              onClose={() => {
+                  setShowBrowser(false)
+                  setSessionId(null)
+              }}
           />
         </div>
       )}
