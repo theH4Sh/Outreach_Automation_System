@@ -43,7 +43,7 @@ const progressPct = (campaign) => {
 }
 
 const CampaignManager = () => {
-  const { data: campaigns, loading: campaignsLoading, error: campaignsError } = useFetch('http://localhost:4000/api/campaigns', 'GET')
+  const { data: campaigns, loading: campaignsLoading, error: campaignsError } = useFetch(`${import.meta.env.VITE_API}campaigns`, 'GET')
   const [message, setMessage] = useState(null)
   const [updatingId, setUpdatingId] = useState(null)
   const [localCampaigns, setLocalCampaigns] = useState([])
@@ -92,7 +92,7 @@ const CampaignManager = () => {
     setMessage(null)
     setUpdatingId(campaignId)
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaignId}/status`, {
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${campaignId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       })
@@ -109,7 +109,7 @@ const CampaignManager = () => {
   const cancelSchedule = async (campaign) => {
     setUpdatingId(campaign._id)
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaign._id}`, {
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${campaign._id}`, {
         method: 'PUT',
         body: JSON.stringify({ status: 'inactive', scheduledAt: null }),
       })
@@ -129,7 +129,7 @@ const CampaignManager = () => {
     setDeleting(true)
     setUpdatingId(campaignId)
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaignId}`, { method: 'DELETE' })
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${campaignId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Delete failed')
       setLocalCampaigns((prev) => prev.filter((c) => c._id !== campaignId))
       setDeleteModalOpen(false)

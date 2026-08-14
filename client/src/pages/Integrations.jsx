@@ -21,7 +21,7 @@ const Integrations = () => {
     setProfilesLoading(true)
     setProfilesError('')
     try {
-      const res = await fetch('http://localhost:4000/api/getProfiles/', {
+      const res = await fetch(`${import.meta.env.VITE_API}getProfiles/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ const Integrations = () => {
     setStatus('')
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:4000/api/integrate/', {
+      const res = await fetch(`${import.meta.env.VITE_API}integrate/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ const Integrations = () => {
   const handleCloseBrowser = async () => {
   try {
     const res = await fetch(
-      `http://localhost:4000/api/integrate/session`,
+      `${import.meta.env.VITE_API}integrate/session`,
       {
         method: 'DELETE',
         headers: {
@@ -110,7 +110,7 @@ const Integrations = () => {
     setStatus('')
     try {
       const res = await fetch(
-        `http://localhost:4000/api/deleteProfile/${encodeURIComponent(profileId)}`, { 
+        `${import.meta.env.VITE_API}deleteProfile/${encodeURIComponent(profileId)}`, { 
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

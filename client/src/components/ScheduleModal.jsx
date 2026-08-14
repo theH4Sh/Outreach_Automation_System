@@ -70,7 +70,7 @@ const ScheduleModal = ({ isOpen, campaign, onClose, onScheduled }) => {
 
     setLoading(true)
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${campaign._id}/schedule`, {
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${campaign._id}/schedule`, {
         method: 'PATCH',
         body: JSON.stringify({ scheduledAt: scheduledDate.toISOString() }),
       })

@@ -3,7 +3,7 @@ import useFileUpload from '../hooks/useFileUpload'
 
 const UploadLead = () => {
   const fileInputRef = useRef(null)
-  const { upload, loading } = useFileUpload('http://localhost:4000/api/lead')
+  const { upload, loading } = useFileUpload(`${import.meta.env.VITE_API}lead`)
   const [message, setMessage] = useState(null)
   const [selectedFile, setSelectedFile] = useState(null)
   const [dragOver, setDragOver] = useState(false)

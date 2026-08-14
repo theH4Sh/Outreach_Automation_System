@@ -11,7 +11,7 @@ const RemoteBrowser = ({ sessionId, token, onClose }) => {
         }
 
         const wsUrl =
-            `ws://localhost:7000?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token)}`
+            `${import.meta.env.VITE_SESSION_WS}?sessionId=${encodeURIComponent(sessionId)}&token=${encodeURIComponent(token)}`
 
         console.log('Connecting to browser session:', sessionId)
 

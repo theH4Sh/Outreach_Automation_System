@@ -13,7 +13,7 @@ const statusMeta = {
 
 const CampaignDetailPage = () => {
   const { id } = useParams()
-  const { data: campaign, loading, error } = useFetch(`http://localhost:4000/api/campaign/${id}`, 'GET')
+  const { data: campaign, loading, error } = useFetch(`${import.meta.env.VITE_API}campaign/${id}`, 'GET')
   const [currentCampaign, setCurrentCampaign] = useState(null)
   const [statusMessage, setStatusMessage] = useState(null)
   const [updating, setUpdating] = useState(false)
@@ -42,7 +42,7 @@ const CampaignDetailPage = () => {
   const loadLogs = useCallback(async () => {
     if (!id) return
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/logs`)
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${id}/logs`)
       if (!res.ok) return
       setLogs(await res.json())
     } catch (err) {
@@ -99,7 +99,7 @@ const CampaignDetailPage = () => {
     setUpdating(true)
     const newStatus = displayedCampaign.status === 'active' ? 'inactive' : 'active'
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/status`, {
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       })
@@ -117,7 +117,7 @@ const CampaignDetailPage = () => {
     if (!latestFailedRunId) return
     setRetrying(true)
     try {
-      const res = await apiFetch(`http://localhost:4000/api/campaign/${id}/retry?runId=${latestFailedRunId}`, {
+      const res = await apiFetch(`${import.meta.env.VITE_API}campaign/${id}/retry?runId=${latestFailedRunId}`, {
         method: 'POST',
       })
       if (!res.ok) throw new Error((await res.text()) || 'Retry failed')
