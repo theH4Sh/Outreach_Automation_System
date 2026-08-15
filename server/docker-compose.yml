@@ -1,0 +1,25 @@
+services:
+    mongo:
+        image: mongo:8
+        ports:
+        - "27017:27017"
+        volumes:
+        - ./mongo-data:/data/db
+
+    backend:
+        build: .
+        container_name: backend
+
+        ports:
+        -   "4000:4000"
+        -   "7000:7000"
+        -   "27017:27017"
+
+        env_file:
+            - .env
+        
+        volumes:
+            - ./profiles:/app/profiles
+            - ./files:/app/files
+        
+        restart: unless-stopped

@@ -1,0 +1,19 @@
+FROM node:latest
+
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        xvfb \
+        x11vnc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+RUN npm ci
+RUN npx playwright install
+
+EXPOSE 4000
+EXPOSE 7000
+
+CMD ["npm", "start"]
