@@ -10,7 +10,7 @@ const createBrowser = async (browserProfileId) => {
 
     const profilePath = 'profiles/' + profileDoc.profileName;
     return await chromium.launchPersistentContext(profilePath,{
-        headless: false,
+        headless: true,
     })
 }
 
