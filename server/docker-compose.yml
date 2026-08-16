@@ -21,4 +21,7 @@ services:
             - ./profiles:/app/profiles
             - ./files:/app/files
         
+        depends_on:
+            - mongo
+        
         restart: unless-stopped
