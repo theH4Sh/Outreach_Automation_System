@@ -35,7 +35,7 @@ const integrator = async (userId, profileName) => {
 	env.DISPLAY = `:${display}`;
 	delete env.WAYLAND_DISPLAY;
 	// Start x11vnc
-	const x11vnc = spawn(
+	{/*const x11vnc = spawn(
 		'x11vnc',
 		[
 			'-display',
@@ -53,9 +53,55 @@ const integrator = async (userId, profileName) => {
 
 	x11vnc.on('error', (err) => {
 		console.error('x11vnc error:', err)
-	})
+	})*/}
+
+	const x11vnc = spawn('x11vnc', [
+		'-display', `:${display}`,
+		'-forever',
+		'-shared',
+		'-rfbport', String(vncPort),
+		'-nopw'
+	], { env });
+
+	session.x11vnc = x11vnc;
+
+	x11vnc.stdout.on('data', data => {
+		console.log(`[x11vnc stdout] ${data.toString()}`);
+	});
+
+	x11vnc.stderr.on('data', data => {
+		console.error(`[x11vnc stderr] ${data.toString()}`);
+	});
+
+	x11vnc.on('error', err => {
+		console.error('[x11vnc spawn error]', err);
+	});
+
+	x11vnc.on('exit', (code, signal) => {
+		console.log(`[x11vnc exited] code=${code} signal=${signal}`);
+	});
 
 	await new Promise(resolve => setTimeout(resolve, 1000))
+
+	const net = require('net');
+
+	await new Promise((resolve) => {
+		const test = net.createConnection({
+			host: '127.0.0.1',
+			port: vncPort
+		});
+
+		test.on('connect', () => {
+			console.log(`🔥 VNC PORT ${vncPort} IS CONNECTED`);
+			test.destroy();
+			resolve();
+		});
+
+		test.on('error', (err) => {
+			console.error(`💀 VNC PORT ${vncPort} FAILED:`, err.message);
+			resolve();
+		});
+	});
 
 	// Start noVNC
 
