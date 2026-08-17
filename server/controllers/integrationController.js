@@ -2,6 +2,8 @@ const {integrator, stopIntegration} = require('../engine/integrator');
 const catchAsync = require('../middleware/catchAsync')
 const BrowserProfile = require('../model/BrowserProfile')
 const validateObjectId = require('../utils/validateObjectId');
+const { rm } = require('fs/promises')
+const path = require('path')
 
 const integrateAccount = catchAsync(async (req, res) => {
     const userId = req.user._id;
@@ -60,7 +62,13 @@ const deleteProfile = catchAsync(async (req, res) => {
     if (!deletedProfile) {
         return res.status(404).json({ message: 'Profile not found' });
     }
-    // Optionally, you can also delete the corresponding browser profile directory here
+
+    // Delete browser profile directory
+    const profilePath = path.resolve('./profiles', deletedProfile.profileName);
+    await rm(profilePath, {
+        recursive: true,
+        force: true
+    });
     res.status(200).json({ message: `Profile ${deletedProfile.profileName} deleted successfully` });
 });
 
