@@ -83,26 +83,6 @@ const integrator = async (userId, profileName) => {
 
 	await new Promise(resolve => setTimeout(resolve, 1000))
 
-	const net = require('net');
-
-	await new Promise((resolve) => {
-		const test = net.createConnection({
-			host: '127.0.0.1',
-			port: vncPort
-		});
-
-		test.on('connect', () => {
-			console.log(`🔥 VNC PORT ${vncPort} IS CONNECTED`);
-			test.destroy();
-			resolve();
-		});
-
-		test.on('error', (err) => {
-			console.error(`💀 VNC PORT ${vncPort} FAILED:`, err.message);
-			resolve();
-		});
-	});
-
 	// Start noVNC
 
 	// const novnc = spawn('novnc', [
