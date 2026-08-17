@@ -1,0 +1,36 @@
+name: Deploy Frontend
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            -'client/**'
+            -'.github/workflows/deploy-frontend.yml'
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        environment: production
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Deploy Frontend
+              uses: appleboy/ssh-action@v1.2.0
+              with:
+                host: ${{secrets.EC2_HOST}}
+                username: ${{secrets.EC2_USERNAME}}
+                key: ${{secrets.EC2_SSH_KEY}}
+
+                script: |
+                    cd ~/app/
+
+                    git pull
+
+                    cd client
+
+                    npm install
+
+                    npm run build
+
+                    sudo systemctl restart nginx
