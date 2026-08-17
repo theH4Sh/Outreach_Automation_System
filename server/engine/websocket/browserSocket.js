@@ -3,6 +3,8 @@ const net = require('net')
 const jwt = require('jsonwebtoken')
 
 const sessionManager = require('../sessionManager')
+const { stopIntegration } = require('../integrator')
+
 function setupBrowserSocket(httpServer) {
     const browserWss = new WebSocket.Server({
         server: httpServer,
@@ -81,11 +83,12 @@ function setupBrowserSocket(httpServer) {
                 }
             });
 
-            client.on('close', () => {
+            client.on('close', async () => {
                 console.log(
                     `Browser WebSocket closed: ${userId} -> ${sessionId}`
                 );
-
+                
+                await stopIntegration(userId);
                 vnc.destroy();
             });
 
