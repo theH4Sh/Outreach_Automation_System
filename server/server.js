@@ -23,11 +23,14 @@ mongoose.connect(mongoUri, {
     process.exit(1);
   });
 
+const setupBrowserSocket = require('./engine/websocket/browserSocket');
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
   cors: { origin: "*"}
 })
+
+setupBrowserSocket(httpServer)
 
 io.on('connection', (socket) => {
   console.log("Frontend Connected")
