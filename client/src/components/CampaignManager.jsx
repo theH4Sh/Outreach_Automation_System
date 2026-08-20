@@ -211,7 +211,122 @@ const CampaignManager = () => {
 
               return (
                 <li key={campaign._id} className="group px-4 py-3.5 transition hover:bg-slate-50/70">
-                  <div className="grid gap-3 xl:grid-cols-[minmax(0,2fr)_96px_140px_100px_180px_220px] xl:items-center">
+                  <div className="space-y-3 xl:hidden">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <Link
+                          to={`/campaigns/${campaign._id}`}
+                          className="block truncate text-sm font-semibold text-slate-900 hover:text-indigo-600"
+                        >
+                          {campaign.name}
+                        </Link>
+                        {campaign.description && (
+                          <p className="mt-0.5 truncate text-xs text-slate-500">{campaign.description}</p>
+                        )}
+                      </div>
+
+                      <span className={`inline-flex shrink-0 rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${meta.className}`}>
+                        {meta.label}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <div className="rounded-lg bg-slate-50 p-2.5">
+                        <p className="text-[10px] uppercase tracking-wide text-slate-400">Progress</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                            <div
+                              className={`h-full rounded-full transition-all ${campaign.status === 'active' ? 'bg-emerald-500' : 'bg-slate-900'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="w-7 text-right text-[11px] font-medium tabular-nums text-slate-500">{pct}%</span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-slate-50 p-2.5">
+                        <p className="text-[10px] uppercase tracking-wide text-slate-400">Leads</p>
+                        <p className="mt-2 text-sm font-semibold text-slate-900">{campaign.leads?.length ?? 0}</p>
+                      </div>
+
+                      <div className="col-span-2 rounded-lg bg-slate-50 p-2.5">
+                        <p className="text-[10px] uppercase tracking-wide text-slate-400">Browser profile</p>
+                        <p className="mt-2 truncate text-sm font-medium text-slate-700">
+                          {campaign.browserProfile?.profileName || 'No profile'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {campaign.status === 'scheduled' && campaign.scheduledAt && (
+                      <p className="text-[11px] text-sky-600">{new Date(campaign.scheduledAt).toLocaleString()}</p>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-end gap-1">
+                      {campaign.status === 'active' ? (
+                        <button
+                          type="button"
+                          title="Pause"
+                          disabled={busy}
+                          onClick={() => handleStatusChange(campaign._id, 'inactive')}
+                          className="inline-flex h-8 items-center gap-1 rounded-lg bg-amber-500 px-2.5 text-[11px] font-semibold text-white hover:bg-amber-600 disabled:opacity-40"
+                        >
+                          <IconPause /> Pause
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          title="Run"
+                          disabled={busy}
+                          onClick={() => handleStatusChange(campaign._id, 'active')}
+                          className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40"
+                        >
+                          <IconPlay /> Run
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        title="Schedule"
+                        disabled={busy}
+                        onClick={() => { setScheduleCampaignTarget(campaign); setScheduleModalOpen(true) }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-40"
+                      >
+                        <IconClock />
+                      </button>
+
+                      {campaign.status === 'scheduled' && (
+                        <button
+                          type="button"
+                          title="Cancel schedule"
+                          disabled={busy}
+                          onClick={() => cancelSchedule(campaign)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-white disabled:opacity-40"
+                        >
+                          <IconX />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        title="Delete"
+                        disabled={busy}
+                        onClick={() => { setDeleteCampaignTarget(campaign); setDeleteModalOpen(true) }}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                      >
+                        <IconTrash />
+                      </button>
+
+                      <Link
+                        to={`/campaigns/${campaign._id}`}
+                        title="Open"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900"
+                      >
+                        <IconChevron />
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="hidden gap-3 xl:grid xl:grid-cols-[minmax(0,2fr)_96px_140px_100px_180px_220px] xl:items-center">
                     <div className="min-w-0 py-1 xl:py-0">
                       <div className="flex items-center gap-2">
                         <Link
