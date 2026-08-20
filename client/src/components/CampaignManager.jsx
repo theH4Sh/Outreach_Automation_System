@@ -194,12 +194,13 @@ const CampaignManager = () => {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="hidden grid-cols-[1fr_90px_100px_140px_auto] gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:grid">
-            <span>Campaign</span>
-            <span>Status</span>
-            <span>Progress</span>
-            <span>Leads</span>
-            <span className="text-right">Actions</span>
+          <div className="hidden border-b border-slate-100 bg-slate-50/80 px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 xl:grid xl:grid-cols-[minmax(0,2fr)_96px_140px_100px_180px_220px] xl:gap-3">
+            <span className="min-w-0">Campaign</span>
+            <span className="min-w-0">Status</span>
+            <span className="min-w-0">Progress</span>
+            <span className="min-w-0">Leads</span>
+            <span className="min-w-0">Browser Profile</span>
+            <span className="min-w-0 text-center">Actions</span>
           </div>
 
           <ul className="divide-y divide-slate-100">
@@ -210,8 +211,8 @@ const CampaignManager = () => {
 
               return (
                 <li key={campaign._id} className="group px-4 py-3.5 transition hover:bg-slate-50/70">
-                  <div className="grid gap-3 sm:grid-cols-[1fr_90px_100px_140px_auto] sm:items-center">
-                    <div className="min-w-0">
+                  <div className="grid gap-3 xl:grid-cols-[minmax(0,2fr)_96px_140px_100px_180px_220px] xl:items-center">
+                    <div className="min-w-0 py-1 xl:py-0">
                       <div className="flex items-center gap-2">
                         <Link
                           to={`/campaigns/${campaign._id}`}
@@ -230,27 +231,36 @@ const CampaignManager = () => {
                       )}
                     </div>
 
-                    <div>
+                    <div className="min-w-0 xl:flex xl:items-center xl:justify-start">
                       <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${meta.className}`}>
                         {meta.label}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                        <div
-                          className={`h-full rounded-full transition-all ${campaign.status === 'active' ? 'bg-emerald-500' : 'bg-slate-900'}`}
-                          style={{ width: `${pct}%` }}
-                        />
+                    <div className="min-w-0 xl:flex xl:items-center xl:justify-start">
+                      <div className="flex w-full items-center gap-2">
+                        <div className="h-1.5 w-full max-w-[80px] overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className={`h-full rounded-full transition-all ${campaign.status === 'active' ? 'bg-emerald-500' : 'bg-slate-900'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-8 text-right text-[11px] font-medium tabular-nums text-slate-500">{pct}%</span>
                       </div>
-                      <span className="w-8 text-right text-[11px] font-medium tabular-nums text-slate-500">{pct}%</span>
                     </div>
 
-                    <div className="text-xs text-slate-600">
-                      <span className="font-semibold text-slate-900">{campaign.leads?.length ?? 0}</span> leads
+                    <div className="min-w-0 text-xs text-slate-600 xl:flex xl:items-center xl:justify-start">
+                      <span className="font-semibold text-slate-900">{campaign.leads?.length ?? 0}</span>
+                      <span className="ml-1">leads</span>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-end gap-1">
+                    <div className="min-w-0 text-xs text-slate-600 xl:flex xl:items-center xl:justify-start">
+                      <span className="block truncate font-medium text-slate-700">
+                        {campaign.browserProfile?.profileName || 'No profile'}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-1 xl:justify-end">
                       {campaign.status === 'active' ? (
                         <button
                           type="button"
