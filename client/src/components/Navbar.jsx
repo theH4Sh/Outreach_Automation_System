@@ -38,9 +38,9 @@ const Navbar = ({ onMenuToggle, sidebarOpen }) => {
 
           <Link to="/" className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-[11px] font-bold text-white">
-              O
+              I
             </span>
-            <span className="text-sm font-semibold tracking-tight text-slate-900">OAS</span>
+            <span className="text-sm font-semibold tracking-tight text-slate-900">InstaReach</span>
           </Link>
         </div>
 

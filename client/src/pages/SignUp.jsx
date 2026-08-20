@@ -35,7 +35,7 @@ export default function SignUp() {
   }
 
   return (
-    <AuthLayout title="Create your account" subtitle="Get started with OAS in seconds">
+    <AuthLayout title="Create your account" subtitle="Get started with InstaReach in seconds">
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
           <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1.5">Username</label>

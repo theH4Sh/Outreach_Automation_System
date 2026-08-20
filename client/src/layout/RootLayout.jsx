@@ -125,9 +125,9 @@ const RootLayout = () => {
         >
           <div className="flex h-12 shrink-0 items-center gap-2 border-b border-slate-100 px-4 md:hidden">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-[11px] font-bold text-white">
-              O
+              I
             </span>
-            <span className="text-sm font-semibold text-slate-900">OAS</span>
+            <span className="text-sm font-semibold text-slate-900">InstaReach</span>
           </div>
 
           <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">

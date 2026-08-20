@@ -16,7 +16,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="text-xl font-bold tracking-tight">OAS</span>
+            <span className="text-xl font-bold tracking-tight">InstaReach</span>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <span className="text-lg font-bold">OAS</span>
+          <span className="text-lg font-bold">Instareach</span>
         </div>
 
         <div className="w-full max-w-md animate-fade-up">
